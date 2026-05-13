@@ -1,0 +1,13 @@
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\bin\x86\Debug\get_data.exe.config
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\bin\x86\Debug\get_data.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\bin\x86\Debug\get_data.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\bin\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\bin\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.csproj.ResolveComReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\get_data\get_data\obj\x86\Debug\get_data.exe.config

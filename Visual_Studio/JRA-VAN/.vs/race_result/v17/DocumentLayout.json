@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\JRA-VAN\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{2E38FB83-0C42-41C0-8F47-31C4836C900D}|JRA-VAN\\JRA-VAN.csproj|c:\\users\\dev-w\\desktop\\workspace\\visual_studio\\jra-van\\jra-van\\race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{2E38FB83-0C42-41C0-8F47-31C4836C900D}|JRA-VAN\\JRA-VAN.csproj|solutionrelative:jra-van\\race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "race_result.cs",
+              "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\JRA-VAN\\JRA-VAN\\race_result.cs",
+              "RelativeDocumentMoniker": "JRA-VAN\\race_result.cs",
+              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\JRA-VAN\\JRA-VAN\\race_result.cs",
+              "RelativeToolTip": "JRA-VAN\\race_result.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-19T06:25:13.961Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

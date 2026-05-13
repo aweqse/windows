@@ -1,0 +1,13 @@
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\bin\x86\Debug\jockey_info.exe.config
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\bin\x86\Debug\jockey_info.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\bin\x86\Debug\jockey_info.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\bin\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\bin\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.csproj.ResolveComReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\jockey_info\jockey_info\obj\x86\Debug\jockey_info.exe.config

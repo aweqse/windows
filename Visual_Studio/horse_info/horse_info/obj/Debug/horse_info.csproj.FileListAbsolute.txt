@@ -1,0 +1,2 @@
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\horse_info\horse_info\obj\Debug\horse_info.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\horse_info\horse_info\obj\Debug\horse_info.csproj.CoreCompileInputs.cache

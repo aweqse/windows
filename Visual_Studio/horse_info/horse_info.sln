@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37203.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "horse_info", "horse_info\horse_info.csproj", "{F03B1436-9145-4724-9597-E7A6649C9B4C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Debug|x86.ActiveCfg = Debug|x86
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Debug|x86.Build.0 = Debug|x86
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Release|x86.ActiveCfg = Release|x86
+		{F03B1436-9145-4724-9597-E7A6649C9B4C}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C8DF1AFB-93B5-462A-B36B-189E2B4D1DEA}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,7 @@
+sql_pass="Fujieda1217"
+insert_csv_dir="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output"
+insert_race_result_csv_dir="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output\\race_result_csv"
+insert_odds_csv_dir="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output\\odds_csv"
+insert_horse_csv_dir="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output\\horse_csv"
+insert_processed_csv_dir="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output\\processed_csv"
+processed_file_path="C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\output\\processed_csv"
