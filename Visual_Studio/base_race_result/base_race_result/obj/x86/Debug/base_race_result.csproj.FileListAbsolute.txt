@@ -11,3 +11,16 @@ C:\Users\dev-w\Desktop\workspace\Visual_Studio\base_race_result\base_race_result
 C:\Users\dev-w\Desktop\workspace\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.exe
 C:\Users\dev-w\Desktop\workspace\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.pdb
 C:\Users\dev-w\Desktop\workspace\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\bin\x86\Debug\base_race_result.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\bin\x86\Debug\base_race_result.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\bin\x86\Debug\base_race_result.pdb
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\bin\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\bin\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\Interop.JVDTLabLib.dll
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\Interop.JVLinkAgentLib.dll
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.csproj.ResolveComReference.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\base_race_result\base_race_result\obj\x86\Debug\base_race_result.pdb

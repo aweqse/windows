@@ -1,12 +1,37 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\dev-w\\Desktop\\workspace\\Visual_Studio\\base_race_result\\",
-  "Documents": [],
+  "WorkspaceRootPath": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|c:\\users\\dev-w\\desktop\\workspace\\ai\\visual_studio\\base_race_result\\base_race_result\\base_race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|solutionrelative:base_race_result\\base_race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "base_race_result.cs",
+              "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result.cs",
+              "RelativeDocumentMoniker": "base_race_result\\base_race_result.cs",
+              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result.cs",
+              "RelativeToolTip": "base_race_result\\base_race_result.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAADwvxgAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T01:59:41.038Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

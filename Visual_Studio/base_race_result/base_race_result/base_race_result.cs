@@ -21,7 +21,8 @@ class Program
     static readonly string DefaultEndDate = "20241231";
 
     // 4 = セットアップデータをダイアログなしで取得
-    static readonly int OpenOption = 4;
+    static readonly int OpenOption = 2
+        ;
 
     // 出力先
     static readonly string OutputDir = @"C:\Users\dev-w\Desktop\workspace\Visual_Studio\output\race_result_csv";
