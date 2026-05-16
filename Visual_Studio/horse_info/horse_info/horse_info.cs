@@ -51,7 +51,7 @@ namespace JvHorseInfoExport
             int birthFrom = ToIntYmd(birthFromText);
             int birthTo = ToIntYmd(birthToText);
 
-            string baseDir = @"C:\Users\dev-w\Desktop\workspace\Visual_Studio\output\horse_csv";
+            string baseDir = @"C:\Users\dev-w\Desktop\workspace\output\horse_csv";
 
             string fileSuffix =
                 (birthFrom == 0 ? "all" : birthFrom.ToString()) +
