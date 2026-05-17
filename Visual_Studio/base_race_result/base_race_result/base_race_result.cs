@@ -10,22 +10,22 @@ using System.Text;
 using System.Threading;
 using static JVData_Struct;
 
+
 class Program
 {
     // =========================
     // 基本設定
     // =========================
 
-    // 引数なしで実行した場合のデフォルト期間
-    static readonly string DefaultStartDate = "20240101";
-    static readonly string DefaultEndDate = "20241231";
-
-    // 4 = セットアップデータをダイアログなしで取得
-    static readonly int OpenOption = 2
-        ;
+    // 通常運用では「先週の月曜〜日曜」のレース結果だけを取得する。
+    // 手動で範囲指定したい場合は、Main内の「手動範囲指定」2行のコメントアウトを外す。
+    //
+    // 2 = 通常データ取得。週次差分・直近取得向け。
+    // 過去年分などセットアップデータを取り直す場合は 4 に変更する。
+    static readonly int OpenOption = 4;
 
     // 出力先
-    static readonly string OutputDir = @"C:\Users\dev-w\Desktop\workspace\Visual_Studio\output\race_result_csv";
+    static readonly string OutputDir = @"C:\Users\dev-w\Desktop\workspace\output\race_result_csv";
     static readonly string OutputFileNameBase = "race_result";
 
     // JVGetsバッファ
@@ -48,9 +48,29 @@ class Program
     {
         Console.OutputEncoding = Encoding.UTF8;
 
-        string startDateText = DefaultStartDate;
-        string endDateText = DefaultEndDate;
+        // 通常運用：
+        // 今日の日付を基準にして「先週の月曜〜日曜」を自動取得する。
+        // 例:
+        //   今日が 2026-05-16(土) → 2026-05-04(月)〜2026-05-10(日)
+        //   今日が 2026-05-18(月) → 2026-05-11(月)〜2026-05-17(日)
+        DateTime startDate = GetLastWeekMonday(DateTime.Today);
+        DateTime endDate = startDate.AddDays(6);
 
+        string startDateText = ToYmd(startDate);
+        string endDateText = ToYmd(endDate);
+
+        // =========================
+        // 手動範囲指定
+        // =========================
+        // 範囲を直接指定したい場合は、下の2行のコメントアウトを外して日付を変更する。
+        // 例: 2024年の1年分を取得する場合
+        //
+        // startDateText = "20240101";
+        // endDateText = "20241231";
+
+        // exe引数で開始日・終了日を渡した場合は、引数を最優先する。
+        // 例:
+        //   base_race_result.exe 20240101 20241231
         if (args.Length >= 2)
         {
             startDateText = args[0];
@@ -64,9 +84,6 @@ class Program
             Console.ReadLine();
             return;
         }
-
-        DateTime startDate;
-        DateTime endDate;
 
         if (!TryParseYmd(startDateText, out startDate) || !TryParseYmd(endDateText, out endDate))
         {
@@ -92,6 +109,7 @@ class Program
         Console.WriteLine("CSV path=" + outCsv);
         Console.WriteLine("取得開始日=" + startDate.ToString("yyyy-MM-dd"));
         Console.WriteLine("取得終了日=" + endDate.ToString("yyyy-MM-dd"));
+        Console.WriteLine("取得モード=先週分自動取得。手動範囲指定またはexe引数がある場合は指定範囲を使用。");
 
         if (!Is14Digits(raceFromTime))
         {
@@ -2135,6 +2153,22 @@ class Program
     // =========================
     // 日付・ID
     // =========================
+
+    static string ToYmd(DateTime dt)
+    {
+        return dt.ToString("yyyyMMdd");
+    }
+
+    static DateTime GetLastWeekMonday(DateTime baseDate)
+    {
+        // DayOfWeek は Sunday=0, Monday=1, ... Saturday=6。
+        // 月曜始まりの週として扱うため、月曜からの経過日数に変換する。
+        int daysSinceMonday = ((int)baseDate.DayOfWeek + 6) % 7;
+
+        // 今週の月曜を求め、そこから7日前へ戻す。
+        DateTime thisWeekMonday = baseDate.Date.AddDays(-daysSinceMonday);
+        return thisWeekMonday.AddDays(-7);
+    }
 
     static bool Is8Digits(string s)
     {
