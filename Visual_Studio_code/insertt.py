@@ -19,6 +19,7 @@ def main():
     while len(race_result_array)!=0:
         target_file=race_result_array[0]
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
+        check_data(target_file_path)
         insert_race_result(target_file_path,conn,cursor)
         move_file(target_file_path)
         race_result_array=race_result_get_filename(insert_race_result_csv_dir)
@@ -89,19 +90,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(target_file_path,conn,cursor):
-    race_result_inssert_data=[]
-    with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
-                row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
-                row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
-                row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_name"],row["horse_id"],row["sex"],row["horse_age"],
-                row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey"],row["jockey_id"],row["jockey_belong_area"],
-                row["belong_area"],row["trainer"],row["trainer_id"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
-                row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
-            data=convert_null(data)
-            race_result_inssert_data.append(data)
+
 
     insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, race_result_inssert_data)
@@ -454,14 +443,62 @@ def insert_trainer_info(conn,cursor):
             data=[trainer_id,trainer_name,trainer_belong_area,belong_update,active,first_run,last_run]
             insert_array.append(data)
             insert_count=insert_count+1
-        
+
+def check_data(target_file_path):
+    race_result_inssert_data=[]
+    race_id_array=[]
+    check_data_dict={}
+    check_array_count=0
+    
+    #検査用の辞書とrace_idの配列を作成する
+    with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            race_id=row["race_id"]
+            race_id_array.append(race_id)
+            check_data=[row["race_id"],row["rank"],row["umaban"],row["entry"]]
+            if race_id not in check_data_dict:
+                check_data_dict[race_id] = []
+            check_data_dict[race_id].append(check_data)
+            check_data=[]
+
+        #rankの値を検査する
+        while len(race_id_array)>check_array_count:
+            race_id=race_id_array[check_array_count]
+            rank_cheak_array=check_data_dict[race_id]
+            
+            #rankがすべて0の場合、配列を削除する
+            if all(int(row[1])==0 for row in rank_cheak_array):
+                del check_data_dict[race_id]
+                check_array_count=check_array_count+1
+            #elif row[]
+
+                
+                   
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+        # for row in reader:
+        #     data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
+        #         row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
+        #         row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
+        #         row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_name"],row["horse_id"],row["sex"],row["horse_age"],
+        #         row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey"],row["jockey_id"],row["jockey_belong_area"],
+        #         row["belong_area"],row["trainer"],row["trainer_id"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
+        #         row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
+        #     data=convert_null(data)
+        #     race_result_inssert_data.append(data)
 
 main()
-
-
-    
-    
