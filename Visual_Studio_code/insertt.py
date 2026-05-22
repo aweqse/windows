@@ -5,6 +5,9 @@ import mysql.connector
 from datetime import date
 import shutil
 import math
+from email.mime.text import MIMEText
+import base64
+from googleapiclient.discovery import build
 
 def main():
     conn,cursor=connect_mysql()
@@ -445,17 +448,35 @@ def insert_trainer_info(conn,cursor):
             insert_count=insert_count+1
 
 def check_data(target_file_path):
-    race_result_inssert_data=[]
+    race_result_inssert_data={}
     race_id_array=[]
     check_data_dict={}
     check_array_count=0
+    duble_array=[]
     
     #検査用の辞書とrace_idの配列を作成する
     with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
+            #インサート用の辞書を作成
+            data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
+                row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
+                row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
+                row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_name"],row["horse_id"],row["sex"],row["horse_age"],
+                row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey"],row["jockey_id"],row["jockey_belong_area"],
+                row["belong_area"],row["trainer"],row["trainer_id"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
+                row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
+            
+            #nullチェックをする
+            data=convert_null(data)
+            
             race_id=row["race_id"]
+            if race_id not in race_result_inssert_data:
+                race_result_inssert_data[race_id] = []
+            race_result_inssert_data[race_id].append(data)
             race_id_array.append(race_id)
+
+            #チェック用の辞書作成
             check_data=[row["race_id"],row["rank"],row["umaban"],row["entry"]]
             if race_id not in check_data_dict:
                 check_data_dict[race_id] = []
@@ -467,11 +488,48 @@ def check_data(target_file_path):
             race_id=race_id_array[check_array_count]
             rank_cheak_array=check_data_dict[race_id]
             
+            #重複チェックのために配列を作成する
+            for duble in rank_cheak_array[2]:
+                duble_array.append(duble)
+            
             #rankがすべて0の場合、配列を削除する
             if all(int(row[1])==0 for row in rank_cheak_array):
-                del check_data_dict[race_id]
+                del race_result_inssert_data[race_id]
                 check_array_count=check_array_count+1
-            #elif row[]
+            
+            #umabanの重複がある場合、手動でインサートするため配列からは削除する。頭数も修正
+            elif len(rank_cheak_array)!=len(duble_array):
+                sent_mail()
+                del race_result_inssert_data[race_id]
+                check_array_count=check_array_count+1
+            check_array_count=check_array_count+1
+        
+        return race_result_inssert_data
+
+def sent_mail():
+    service = build('gmail', 'v1', credentials=creds)
+
+    #メールを作成する
+    sender = "aweqsenotice@gmail.com"
+    recipient = "aweqsenotice@gmail.com"
+    subject = "クレカ利用額通知"
+    to="aweqsenotice@gmail.com"
+    send_text = main_str
+
+    #メールの作成
+    message = MIMEText(send_text)
+    message['to'] = to
+    message['from'] = sender
+    message['subject'] = subject
+
+    #メール文をエンコード
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    message_body = {'raw': raw_message}
+
+    #メール文を送信
+    response = service.users().messages().send(userId="me", body=message_body).execute()
+    print("メールの送信完了")
+    pass
 
                 
                    
@@ -490,15 +548,6 @@ def check_data(target_file_path):
 
 
 
-        # for row in reader:
-        #     data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
-        #         row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
-        #         row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
-        #         row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_name"],row["horse_id"],row["sex"],row["horse_age"],
-        #         row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey"],row["jockey_id"],row["jockey_belong_area"],
-        #         row["belong_area"],row["trainer"],row["trainer_id"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
-        #         row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
-        #     data=convert_null(data)
-        #     race_result_inssert_data.append(data)
+
 
 main()
