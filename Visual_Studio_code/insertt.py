@@ -7,7 +7,6 @@ import shutil
 import math
 from email.mime.text import MIMEText
 import base64
-from googleapiclient.discovery import build
 
 def main():
     conn,cursor=connect_mysql()
@@ -22,8 +21,9 @@ def main():
     while len(race_result_array)!=0:
         target_file=race_result_array[0]
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
-        check_data(target_file_path)
-        insert_race_result(target_file_path,conn,cursor)
+        race_result_inssert_data=check_data(target_file_path)
+        export_csv(race_result_inssert_data)
+        insert_race_result(race_result_inssert_data,conn,cursor)
         move_file(target_file_path)
         race_result_array=race_result_get_filename(insert_race_result_csv_dir)
 
@@ -92,9 +92,7 @@ def horsde_get_filename(insert_horse_csv_dir):
     return horse_array
 
 #レース情報の処理
-def insert_race_result(target_file_path,conn,cursor):
-
-
+def insert_race_result(race_result_inssert_data,conn,cursor):
     insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, race_result_inssert_data)
     conn.commit()
@@ -108,7 +106,6 @@ def insert_horse(target_file_path,conn,cursor):
     judge_data_dict={}
     jugde_dict_count=0
     run_row_dict_count=0
-
     today = date.today()
 
     #insertかupdateか判断するための配列を取得
@@ -418,7 +415,6 @@ def insert_trainer_info(conn,cursor):
     trainer_array=[]
     trainer_dict={}
     insert_array=[]
-
     compare_count=0
     insert_count=0
 
@@ -498,38 +494,48 @@ def check_data(target_file_path):
                 check_array_count=check_array_count+1
             
             #umabanの重複がある場合、手動でインサートするため配列からは削除する。頭数も修正
-            elif len(rank_cheak_array)!=len(duble_array):
-                sent_mail()
+            elif len(rank_cheak_array)!=int(duble_array[-1]):
+                sent_mail(race_id)
                 del race_result_inssert_data[race_id]
                 check_array_count=check_array_count+1
             check_array_count=check_array_count+1
         
         return race_result_inssert_data
 
-def sent_mail():
-    service = build('gmail', 'v1', credentials=creds)
-
-    #メールを作成する
-    sender = "aweqsenotice@gmail.com"
-    recipient = "aweqsenotice@gmail.com"
-    subject = "クレカ利用額通知"
-    to="aweqsenotice@gmail.com"
-    send_text = main_str
-
-    #メールの作成
-    message = MIMEText(send_text)
-    message['to'] = to
-    message['from'] = sender
-    message['subject'] = subject
-
-    #メール文をエンコード
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    message_body = {'raw': raw_message}
-
-    #メール文を送信
-    response = service.users().messages().send(userId="me", body=message_body).execute()
-    print("メールの送信完了")
+def export_csv():
     pass
+
+def sent_mail(race_id, service):
+    sender = "aweqsenotice@gmail.com"
+    to = "aweqsenotice@gmail.com"
+    subject = "インサートcsv不備"
+    send_text = (
+        "競馬AI用のDBにインサートする項目に不備があります。\n"
+        "目視で確認してCSVを修正後、手動でインサートしてください。\n"
+        f"レースIDは {race_id} です。"
+    )
+
+    message = MIMEText(send_text, "plain", "utf-8")
+    message["to"] = to
+    message["from"] = sender
+    message["subject"] = subject
+
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    message_body = {"raw": raw_message}
+
+    try:
+        response = service.users().messages().send(
+            userId="me",
+            body=message_body
+        ).execute()
+
+        print(f"メールの送信完了 race_id={race_id}")
+        return response
+
+    except Exception as e:
+        print(f"メール送信失敗 race_id={race_id}")
+        print(e)
+        return None
 
                 
                    
