@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37314.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "race_time_and_odds_key", "race_time_and_odds_key\race_time_and_odds_key.csproj", "{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Debug|x86.ActiveCfg = Debug|x86
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Debug|x86.Build.0 = Debug|x86
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Release|x86.ActiveCfg = Release|x86
+		{6D070765-FB73-4998-B3BC-CC1DEF9DDEE6}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C6D792C1-283A-4C53-9D2A-6A983391372A}
+	EndGlobalSection
+EndGlobal

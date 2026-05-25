@@ -1,0 +1,16 @@
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.exe.config
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.exe
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.pdb
+C:\Users\dev-w\Desktop\workspace\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\obj\x86\Debug\real_time.pdb
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\real_time\real_time\bin\x86\Debug\real_time.pdb

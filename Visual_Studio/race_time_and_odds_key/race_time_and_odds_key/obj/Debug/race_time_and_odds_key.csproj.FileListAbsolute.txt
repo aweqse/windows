@@ -1,0 +1,8 @@
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\bin\Debug\race_time_and_odds_key.exe.config
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\bin\Debug\race_time_and_odds_key.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\bin\Debug\race_time_and_odds_key.pdb
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\obj\Debug\race_time_and_odds_key.csproj.AssemblyReference.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\obj\Debug\race_time_and_odds_key.csproj.CoreCompileInputs.cache
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\obj\Debug\race_time_and_odds_key.exe
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\obj\Debug\race_time_and_odds_key.pdb
+C:\Users\dev-w\Desktop\workspace\AI\Visual_Studio\race_time_and_odds_key\race_time_and_odds_key\obj\Debug\race_time_and_odds_key.exe.config
