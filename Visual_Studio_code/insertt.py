@@ -7,6 +7,10 @@ import shutil
 import math
 from email.mime.text import MIMEText
 import base64
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+import os
 
 def main():
     conn,cursor=connect_mysql()
@@ -14,32 +18,30 @@ def main():
     insert_odds_csv_dir=config.insert_odds_csv_dir
     insert_horse_csv_dir=config.insert_horse_csv_dir
     race_result_array=race_result_get_filename(insert_race_result_csv_dir)
-    odds_array=odds_get_filename(insert_odds_csv_dir)
     horse_array=horsde_get_filename(insert_horse_csv_dir)
+    odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
     while len(race_result_array)!=0:
         target_file=race_result_array[0]
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
-        race_result_inssert_data=check_data(target_file_path)
-        export_csv(race_result_inssert_data)
+        race_result_inssert_data,fixed_flag=check_data(target_file_path)
+        if fixed_flag==1:
+            export_csv(target_file_path,race_result_inssert_data)
         insert_race_result(race_result_inssert_data,conn,cursor)
         move_file(target_file_path)
-        race_result_array=race_result_get_filename(insert_race_result_csv_dir)
 
     while len(horse_array)!=0:
         target_file=horse_array[0]
         target_file_path=insert_horse_csv_dir+"\\"+target_file
         insert_horse(target_file_path,conn,cursor)
         move_file(target_file_path)
-        horse_array=horsde_get_filename(insert_horse_csv_dir)
 
     while len(odds_array)!=0:
         target_file=odds_array[0]
         target_file_path=insert_odds_csv_dir+"\\"+target_file
         insert_odds(target_file_path,target_file,conn,cursor)
         move_file(target_file_path)
-        odds_array=odds_get_filename(insert_odds_csv_dir)
 
     #trainer_infoの処理
     insert_trainer_info(conn,cursor)
@@ -400,10 +402,9 @@ def convert_null(data):
         target_value=data[seach_count]
         if target_value=="NULL" or target_value=="":
             data[seach_count]=None
+            print("NULLの変換完了")
         seach_count=seach_count+1
-    else:
-        print("NULLの変換完了")
-        return data
+    return data
         
 def move_file(target_file_path):
     processed_file_path=config.processed_file_path
@@ -417,20 +418,27 @@ def insert_trainer_info(conn,cursor):
     insert_array=[]
     compare_count=0
     insert_count=0
+    dict_count=0
 
     #race_resultから更新候補の一覧を取得する
     make_dict_query="select trainer_id,trainer,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer,trainer_belong_area;"
     cursor.execute(make_dict_query)
     race_result_array = cursor.fetchall()
+    if len(race_result_array)!=0:
+        trainer_id=race_result_array[dict_count][0]
+        #辞書を作成する
+        trainer_dict[trainer_id]=race_result_array[dict_count]
+
 
     #trainer_infoから更新候補と比較して差分があればupdate処理、noneならinsert処理に分岐する
     compare_count_query="select trainer_id,trainer_belong_area,last_run from trainer_info;"
     cursor.execute(compare_count_query)
     trainer_info_array = cursor.fetchall()
 
+    #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
     while len(race_result_array)>insert_count:
         #trainer_infoにデータが何もない場合
-        if len(trainer_info_array)==0:
+        # if len(trainer_info_array)==0 or 
             trainer_id=race_result_array[insert_count]["trainer_id"]
             trainer_name=race_result_array[insert_count]["trainer"]
             trainer_belong_area=race_result_array[insert_count]["trainer_belong_area"]
@@ -449,6 +457,8 @@ def check_data(target_file_path):
     check_data_dict={}
     check_array_count=0
     duble_array=[]
+    sent_mail_array=[]
+    fixed_flag=0
     
     #検査用の辞書とrace_idの配列を作成する
     with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
@@ -479,6 +489,9 @@ def check_data(target_file_path):
             check_data_dict[race_id].append(check_data)
             check_data=[]
 
+        #race_id_arrayの重複を削除する
+        race_id_array=list(set(race_id_array))
+
         #rankの値を検査する
         while len(race_id_array)>check_array_count:
             race_id=race_id_array[check_array_count]
@@ -491,28 +504,63 @@ def check_data(target_file_path):
             #rankがすべて0の場合、配列を削除する
             if all(int(row[1])==0 for row in rank_cheak_array):
                 del race_result_inssert_data[race_id]
-                check_array_count=check_array_count+1
+                fixed_flag=1
             
             #umabanの重複がある場合、手動でインサートするため配列からは削除する。頭数も修正
             elif len(rank_cheak_array)!=int(duble_array[-1]):
-                sent_mail(race_id)
+                sent_mail_array.append(race_id)
                 del race_result_inssert_data[race_id]
-                check_array_count=check_array_count+1
+                fixed_flag=1
             check_array_count=check_array_count+1
-        
-        return race_result_inssert_data
+            duble_array=[]
 
-def export_csv():
-    pass
+        if len(sent_mail_array)!=0:
+            sent_mail(sent_mail_array)
+        return race_result_inssert_data,fixed_flag
 
-def sent_mail(race_id, service):
+def export_csv(target_file_path,race_result_inssert_data):
+    csv_outpath=target_file_path
+    csv_outpath=csv_outpath.replace(".csv","")
+    csv_outpath=csv_outpath+"_fixed.csv"
+
+    #辞書を二次元配列に変換する--2025/05/26--
+
+    with open(csv_outpath, mode="w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(race_result_inssert_data)    
+    move_file(target_file_path)
+
+def sent_mail(sent_mail_array):
+    str_count=0
+    str=""
+
+    SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
+    json_path="C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio_code\\client_secret_764453705025-d2mhtt05ln74s1sgo3dlqfje04nhjd6o.apps.googleusercontent.com.json"
+    token_path="C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio_code\\token.json"
+
+    creds = None
+    #過去にログイン済みなら認証情報を再利用する
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+    else: #初回ログイン時の処理
+        flow = InstalledAppFlow.from_client_secrets_file(json_path, SCOPES)
+        creds = flow.run_local_server(port=8080)
+        with open(token_path, 'w') as token:
+            token.write(creds.to_json())
+
+    while len(sent_mail_array)>str_count:
+        str_temp=sent_mail_array[str_count]
+        str=str+str_temp+"\n"
+        str_count=str_count+1
+
+    service = build('gmail', 'v1', credentials=creds)
     sender = "aweqsenotice@gmail.com"
     to = "aweqsenotice@gmail.com"
     subject = "インサートcsv不備"
     send_text = (
         "競馬AI用のDBにインサートする項目に不備があります。\n"
         "目視で確認してCSVを修正後、手動でインサートしてください。\n"
-        f"レースIDは {race_id} です。"
+        f"レースIDは \n {str} です。"
     )
 
     message = MIMEText(send_text, "plain", "utf-8")
@@ -529,18 +577,16 @@ def sent_mail(race_id, service):
             body=message_body
         ).execute()
 
-        print(f"メールの送信完了 race_id={race_id}")
+        print(f"メールの送信完了 race_id={str}")
         return response
 
     except Exception as e:
-        print(f"メール送信失敗 race_id={race_id}")
+        print(f"メール送信失敗 race_id={str}")
         print(e)
         return None
 
-                
-                   
-
-
+def convert_form_dict_to_list():
+    pass
 
 
 
