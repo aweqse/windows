@@ -535,8 +535,8 @@ def sent_mail(sent_mail_array):
     str=""
 
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
-    json_path="C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio_code\\client_secret_764453705025-d2mhtt05ln74s1sgo3dlqfje04nhjd6o.apps.googleusercontent.com.json"
-    token_path="C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio_code\\token.json"
+    json_path="C:\\Users\\dev-w\\Desktop\\workspace\\gmailAPI\\client_secret_764453705025-d2mhtt05ln74s1sgo3dlqfje04nhjd6o.apps.googleusercontent.com.json"
+    token_path="C:\\Users\\dev-w\\Desktop\\workspace\\gmailAPI\\token.json"
 
     creds = None
     #過去にログイン済みなら認証情報を再利用する
