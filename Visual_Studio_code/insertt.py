@@ -14,39 +14,42 @@ import os
 
 def main():
     conn,cursor=connect_mysql()
-    insert_race_result_csv_dir=config.insert_race_result_csv_dir
-    insert_odds_csv_dir=config.insert_odds_csv_dir
-    insert_horse_csv_dir=config.insert_horse_csv_dir
-    race_result_array=race_result_get_filename(insert_race_result_csv_dir)
-    horse_array=horsde_get_filename(insert_horse_csv_dir)
-    odds_array=odds_get_filename(insert_odds_csv_dir)
-    print("フォルダ内の初期のファイル名の取得完了")
+    # insert_race_result_csv_dir=config.insert_race_result_csv_dir
+    # insert_odds_csv_dir=config.insert_odds_csv_dir
+    # insert_horse_csv_dir=config.insert_horse_csv_dir
+    # race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+    # horse_array=horsde_get_filename(insert_horse_csv_dir)
+    # odds_array=odds_get_filename(insert_odds_csv_dir)
+    # print("フォルダ内の初期のファイル名の取得完了")
 
-    while len(race_result_array)!=0:
-        target_file=race_result_array[0]
-        target_file_path=insert_race_result_csv_dir+"\\"+target_file
-        race_result_inssert_data,fixed_flag=check_data(target_file_path)
-        if fixed_flag==1:
-            export_csv(target_file_path,race_result_inssert_data)
-        insert_race_result(race_result_inssert_data,conn,cursor)
-        move_file(target_file_path)
+    # while len(race_result_filenam_array)!=0:
+    #     #csvファイルは一つしかない想定なので[0]固定
+    #     target_file=race_result_filenam_array[0]
+    #     target_file_path=insert_race_result_csv_dir+"\\"+target_file
+    #     race_result_inssert_data,fixed_flag=check_data(target_file_path)
+    #     race_result_duble_array=convert_form_dict_to_list(race_result_inssert_data)
+    #     if fixed_flag==1:
+    #         export_csv(target_file_path,race_result_duble_array)
+    #     insert_race_result(race_result_duble_array,conn,cursor)
+    #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+    #     move_file(insert_race_result_csv_dir,race_result_filenam_array)
 
-    while len(horse_array)!=0:
-        target_file=horse_array[0]
-        target_file_path=insert_horse_csv_dir+"\\"+target_file
-        insert_horse(target_file_path,conn,cursor)
-        move_file(target_file_path)
+    # while len(horse_array)!=0:
+    #     target_file=horse_array[0]
+    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
+    #     insert_horse(target_file_path,conn,cursor)
+    #     move_file(target_file_path)
 
-    while len(odds_array)!=0:
-        target_file=odds_array[0]
-        target_file_path=insert_odds_csv_dir+"\\"+target_file
-        insert_odds(target_file_path,target_file,conn,cursor)
-        move_file(target_file_path)
+    # while len(odds_array)!=0:
+    #     target_file=odds_array[0]
+    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
+    #     insert_odds(target_file_path,target_file,conn,cursor)
+    #     move_file(target_file_path)
 
     #trainer_infoの処理
     insert_trainer_info(conn,cursor)
 
-        #jockey_infoの処理
+    #jockey_infoの処理
     print("すべての処理完了！！")
     
 def connect_mysql():
@@ -406,17 +409,22 @@ def convert_null(data):
         seach_count=seach_count+1
     return data
         
-def move_file(target_file_path):
-    processed_file_path=config.processed_file_path
-    destination_dir = processed_file_path
-    shutil.move(target_file_path,destination_dir)
+def move_file(insert_race_result_csv_dir,race_result_filenam_array):
+    dest_path_dir=config.processed_file_path
+    #送信元のパスと宛先のパスを生成する
+    for r in race_result_filenam_array:
+        sorce_path=Path(insert_race_result_csv_dir+"\\"+r)
+        dest_path=Path(dest_path_dir+"\\"+r)
+        if dest_path.exists():
+            dest_path.unlink()
+        shutil.move(sorce_path,dest_path)
     print("csvファイルの移動が完了しました")
 
 def insert_trainer_info(conn,cursor):
-    trainer_array=[]
     trainer_dict={}
+    trainer_info_dict={}
     insert_array=[]
-    compare_count=0
+    trainer_id_array=[]
     insert_count=0
     dict_count=0
 
@@ -424,21 +432,32 @@ def insert_trainer_info(conn,cursor):
     make_dict_query="select trainer_id,trainer,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer,trainer_belong_area;"
     cursor.execute(make_dict_query)
     race_result_array = cursor.fetchall()
-    if len(race_result_array)!=0:
-        trainer_id=race_result_array[dict_count][0]
-        #辞書を作成する
-        trainer_dict[trainer_id]=race_result_array[dict_count]
 
+    #辞書を作成する
+    if len(race_result_array)!=0:
+        for row in race_result_array:
+            trainer_id=row["trainer_id"]
+            trainer_id_array.append(trainer_id)
+            trainer_data=[row["trainer_id"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
+            trainer_dict[row["trainer_id"]]=trainer_data
+        print("比較元の辞書作成完了")
 
     #trainer_infoから更新候補と比較して差分があればupdate処理、noneならinsert処理に分岐する
     compare_count_query="select trainer_id,trainer_belong_area,last_run from trainer_info;"
     cursor.execute(compare_count_query)
     trainer_info_array = cursor.fetchall()
 
-    #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
-    while len(race_result_array)>insert_count:
-        #trainer_infoにデータが何もない場合
-        # if len(trainer_info_array)==0 or 
+    if len(trainer_info_array)!=0:
+        for row in trainer_info_array:
+            trainer_info_data=[row["trainer_id"],row["trainer_belong_area"],row["last_run"]]
+            trainer_info_dict[row["trainer_id"]]=trainer_info_data
+        print("比較先の辞書作成完了")
+
+    for t,i in trainer_id_array,trainer_id_array:
+        value=t.get(i,None)
+        #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
+        #insert処理
+        if len(trainer_info_array)==0 or value==None:
             trainer_id=race_result_array[insert_count]["trainer_id"]
             trainer_name=race_result_array[insert_count]["trainer"]
             trainer_belong_area=race_result_array[insert_count]["trainer_belong_area"]
@@ -518,25 +537,29 @@ def check_data(target_file_path):
             sent_mail(sent_mail_array)
         return race_result_inssert_data,fixed_flag
 
-def export_csv(target_file_path,race_result_inssert_data):
+def export_csv(target_file_path,race_result_duble_array):
     csv_outpath=target_file_path
     csv_outpath=csv_outpath.replace(".csv","")
     csv_outpath=csv_outpath+"_fixed.csv"
 
-    #辞書を二次元配列に変換する--2025/05/26--
+    header=["race_id","year,month","day","weekday","kai","nitime","race_number","race_name","place","course_distance","track","course_type","horseage_conditions","race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition",
+            "start_race_time","entry","wakuban","umaban","horse_name","horse_id","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey","jockey_id","jockey_belong_area","belong_area",
+            "trainer","trainer_id","trainer_belong_area","abnormal_code","rank","race_time","corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
+
+    race_result_duble_array.insert(0,header)
 
     with open(csv_outpath, mode="w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-        writer.writerows(race_result_inssert_data)    
-    move_file(target_file_path)
+        writer.writerows(race_result_duble_array)    
+    return race_result_duble_array
 
 def sent_mail(sent_mail_array):
     str_count=0
     str=""
 
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
-    json_path="C:\\Users\\dev-w\\Desktop\\workspace\\gmailAPI\\client_secret_764453705025-d2mhtt05ln74s1sgo3dlqfje04nhjd6o.apps.googleusercontent.com.json"
-    token_path="C:\\Users\\dev-w\\Desktop\\workspace\\gmailAPI\\token.json"
+    json_path=config.json_path
+    token_path=config.token_path
 
     creds = None
     #過去にログイン済みなら認証情報を再利用する
@@ -585,8 +608,12 @@ def sent_mail(sent_mail_array):
         print(e)
         return None
 
-def convert_form_dict_to_list():
-    pass
+def convert_form_dict_to_list(race_result_inssert_data):
+    race_result_duble_array=[]
+    for e in race_result_inssert_data.values():
+        race_result_duble_array.extend(e)
+    return race_result_duble_array
+    
 
 
 
