@@ -30,6 +30,10 @@ def main():
     #     race_result_duble_array=convert_form_dict_to_list(race_result_inssert_data)
     #     if fixed_flag==1:
     #         export_csv(target_file_path,race_result_duble_array)
+
+           #mysqlのdump（バックアップを取得処理を追加する）
+          #dump_mysql():
+           
     #     insert_race_result(race_result_duble_array,conn,cursor)
     #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
     #     move_file(insert_race_result_csv_dir,race_result_filenam_array)
@@ -423,6 +427,7 @@ def move_file(insert_race_result_csv_dir,race_result_filenam_array):
 def insert_trainer_info(conn,cursor):
     trainer_dict={}
     trainer_info_dict={}
+    race_result_hikaku={}
     insert_array=[]
     trainer_id_array=[]
     insert_count=0
@@ -438,7 +443,7 @@ def insert_trainer_info(conn,cursor):
         for row in race_result_array:
             trainer_id=row["trainer_id"]
             trainer_id_array.append(trainer_id)
-            trainer_data=[row["trainer_id"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
+            trainer_data=[row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
             trainer_dict[row["trainer_id"]]=trainer_data
         print("比較元の辞書作成完了")
 
@@ -453,22 +458,35 @@ def insert_trainer_info(conn,cursor):
             trainer_info_dict[row["trainer_id"]]=trainer_info_data
         print("比較先の辞書作成完了")
 
-    for t,i in trainer_id_array,trainer_id_array:
-        value=t.get(i,None)
+    #辞書からトレーナーIDが存在しない場合noneを返す
+    for trainer_id in trainer_id_array:
+        value=trainer_info_dict.get(trainer_id,None)
+
+        #ここでtrainer_infoのlast_runをチェックして２年以上経ってたらactiveの値を0にしてupdata処理に進む
+
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
-        if len(trainer_info_array)==0 or value==None:
-            trainer_id=race_result_array[insert_count]["trainer_id"]
-            trainer_name=race_result_array[insert_count]["trainer"]
-            trainer_belong_area=race_result_array[insert_count]["trainer_belong_area"]
+        if value==None:
+            trainer_name=race_result_array[trainer_id]["trainer"]
+            trainer_belong_area=race_result_array[trainer_id]["trainer_belong_area"]
             belong_update=None
             active=1
-            first_run=race_result_array[insert_count]["first_run"]
-            last_run=race_result_array[insert_count]["last_run"]
-
+            first_run=race_result_array[trainer_id]["first_run"]
+            last_run=race_result_array[trainer_id]["last_run"]
             data=[trainer_id,trainer_name,trainer_belong_area,belong_update,active,first_run,last_run]
             insert_array.append(data)
             insert_count=insert_count+1
+
+        elif value!=None:
+            #比較して差分があればアップデート、なければ何もしない
+            cache=trainer_dict[trainer_id]
+            trainer_info_dict[trainer_id]
+
+
+
+
+
+
 
 def check_data(target_file_path):
     race_result_inssert_data={}
@@ -614,7 +632,8 @@ def convert_form_dict_to_list(race_result_inssert_data):
         race_result_duble_array.extend(e)
     return race_result_duble_array
     
-
+def dump_mysql():
+    pass
 
 
 
