@@ -11,6 +11,7 @@ from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import os
+import subprocess
 
 def main():
     conn,cursor=connect_mysql()
@@ -31,8 +32,8 @@ def main():
     #     if fixed_flag==1:
     #         export_csv(target_file_path,race_result_duble_array)
 
-           #mysqlのdump（バックアップを取得処理を追加する）
-          #dump_mysql():
+    #mysqlのdump（バックアップを取得処理を追加する）
+          #dump_mysql()
            
     #     insert_race_result(race_result_duble_array,conn,cursor)
     #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
@@ -52,6 +53,9 @@ def main():
 
     #trainer_infoの処理
     insert_trainer_info(conn,cursor)
+
+    #jockey_infoの処理
+    insert_jockey_info()
 
     #jockey_infoの処理
     print("すべての処理完了！！")
@@ -464,6 +468,7 @@ def insert_trainer_info(conn,cursor):
 
         #ここでtrainer_infoのlast_runをチェックして２年以上経ってたらactiveの値を0にしてupdata処理に進む
 
+
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
         if value==None:
@@ -482,6 +487,8 @@ def insert_trainer_info(conn,cursor):
             cache=trainer_dict[trainer_id]
             trainer_info_dict[trainer_id]
 
+def insert_jockey_info():
+    pass
 
 
 
@@ -633,7 +640,11 @@ def convert_form_dict_to_list(race_result_inssert_data):
     return race_result_duble_array
     
 def dump_mysql():
-    pass
+    now= date.today().strftime("%Y%m%d")
+    subprocess.run(["ssh","root@192.168.1.108","bash","/root/mysql/script/make_dump_and_move"])
+
+    
+
 
 
 
