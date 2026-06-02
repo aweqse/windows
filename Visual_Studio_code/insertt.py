@@ -14,7 +14,9 @@ import os
 import subprocess
 
 def main():
+    now= date.today().strftime("%Y%m%d")
     conn,cursor=connect_mysql()
+    #make_dir()
     # insert_race_result_csv_dir=config.insert_race_result_csv_dir
     # insert_odds_csv_dir=config.insert_odds_csv_dir
     # insert_horse_csv_dir=config.insert_horse_csv_dir
@@ -33,7 +35,7 @@ def main():
     #         export_csv(target_file_path,race_result_duble_array)
 
     #mysqlのdump（バックアップを取得処理を追加する）
-          #dump_mysql()
+    #dump_mysql()
            
     #     insert_race_result(race_result_duble_array,conn,cursor)
     #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
@@ -434,8 +436,11 @@ def insert_trainer_info(conn,cursor):
     race_result_hikaku={}
     insert_array=[]
     trainer_id_array=[]
+    last_run_array=[]
     insert_count=0
     dict_count=0
+
+    now= date.today().strftime("%Y%m%d")
 
     #race_resultから更新候補の一覧を取得する
     make_dict_query="select trainer_id,trainer,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer,trainer_belong_area;"
@@ -456,18 +461,26 @@ def insert_trainer_info(conn,cursor):
     cursor.execute(compare_count_query)
     trainer_info_array = cursor.fetchall()
 
+    #activeは全部のカラムが対象なので辞書とは別に全部の要素を配列に入れて全配列チェックする
     if len(trainer_info_array)!=0:
         for row in trainer_info_array:
+            #updateの可能性があるので全部の要素を辞書に入れる
             trainer_info_data=[row["trainer_id"],row["trainer_belong_area"],row["last_run"]]
             trainer_info_dict[row["trainer_id"]]=trainer_info_data
+            last_run_array.append(row["last_run"])
         print("比較先の辞書作成完了")
+
+    #activeのチェックをする
+    for l in last_run_array:
+        if now>int(l)+20000:
+
+
+
+
 
     #辞書からトレーナーIDが存在しない場合noneを返す
     for trainer_id in trainer_id_array:
         value=trainer_info_dict.get(trainer_id,None)
-
-        #ここでtrainer_infoのlast_runをチェックして２年以上経ってたらactiveの値を0にしてupdata処理に進む
-
 
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
@@ -643,7 +656,9 @@ def dump_mysql():
     now= date.today().strftime("%Y%m%d")
     subprocess.run(["ssh","root@192.168.1.108","bash","/root/mysql/script/make_dump_and_move"])
 
-    
+def make_dir():
+    #公開鍵認証必須
+    subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/make_dir"])
 
 
 
