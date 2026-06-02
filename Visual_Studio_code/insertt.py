@@ -431,15 +431,11 @@ def move_file(insert_race_result_csv_dir,race_result_filenam_array):
     print("csvファイルの移動が完了しました")
 
 def insert_trainer_info(conn,cursor):
-    trainer_dict={}
     trainer_info_dict={}
-    race_result_hikaku={}
+    race_result_dict={}
     insert_array=[]
     trainer_id_array=[]
-    last_run_array=[]
-    insert_count=0
-    dict_count=0
-
+    updata_array=[]
     now= date.today().strftime("%Y%m%d")
 
     #race_resultから更新候補の一覧を取得する
@@ -452,8 +448,8 @@ def insert_trainer_info(conn,cursor):
         for row in race_result_array:
             trainer_id=row["trainer_id"]
             trainer_id_array.append(trainer_id)
-            trainer_data=[row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
-            trainer_dict[row["trainer_id"]]=trainer_data
+            race_result_data=[row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
+            race_result_dict[row["trainer_id"]]=race_result_data
         print("比較元の辞書作成完了")
 
     #trainer_infoから更新候補と比較して差分があればupdate処理、noneならinsert処理に分岐する
@@ -465,45 +461,65 @@ def insert_trainer_info(conn,cursor):
     if len(trainer_info_array)!=0:
         for row in trainer_info_array:
             #updateの可能性があるので全部の要素を辞書に入れる
-            trainer_info_data=[row["trainer_id"],row["trainer_belong_area"],row["last_run"]]
+            trainer_info_data=[row["trainer_id"],row["trainer_name"],row["trainer_belong_area"],row["belong_update"],row["active"],row["first_run"],row["last_run"]]
             trainer_info_dict[row["trainer_id"]]=trainer_info_data
-            last_run_array.append(row["last_run"])
         print("比較先の辞書作成完了")
-
-    #activeのチェックをする
-    for l in last_run_array:
-        if now>int(l)+20000:
-
-
-
-
 
     #辞書からトレーナーIDが存在しない場合noneを返す
     for trainer_id in trainer_id_array:
-        value=trainer_info_dict.get(trainer_id,None)
+        value=race_result_dict.get(trainer_id,None)
 
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
         if value==None:
-            trainer_name=race_result_array[trainer_id]["trainer"]
-            trainer_belong_area=race_result_array[trainer_id]["trainer_belong_area"]
+            trainer_name=race_result_dict[trainer_id]["trainer"]
+            belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
             belong_update=None
             active=1
-            first_run=race_result_array[trainer_id]["first_run"]
-            last_run=race_result_array[trainer_id]["last_run"]
-            data=[trainer_id,trainer_name,trainer_belong_area,belong_update,active,first_run,last_run]
+            first_run=race_result_dict[trainer_id]["first_run"]
+            last_run=race_result_dict[trainer_id]["last_run"]
+            data=[trainer_id,trainer_name,belong_area,belong_update,active,first_run,last_run]
             insert_array.append(data)
-            insert_count=insert_count+1
+            continue
+       
+        #trainer_infoの配列をactiveとbelong_areaをCheckして当てはまればかきかえる。
+        #書き換えたら必ず､差分がでるのでupdata.arrayrrに格納する
+        #書き替えがない場合は比較して差分があればupdata.arraに格納する。
+        if race_result_dict[trainer_id]!=trainer_info_dict[trainer_id]:
+            # 初期値
+            active=trainer_info_dict[trainer_id]["active"]     
+            belong_area=trainer_info_dict[trainer_id]["belong_area"]
+            belong_update=trainer_info_dict[trainer_id]["belong_update"]
+            last_run=trainer_info_dict[trainer_id]["last_run"]
 
-        elif value!=None:
-            #比較して差分があればアップデート、なければ何もしない
-            cache=trainer_dict[trainer_id]
-            trainer_info_dict[trainer_id]
+             #active_checkのチェック 
+            if int(race_result_dict[trainer_id]["last_run"])+20000>now:
+                active=0
+            #belong_area_check       
+            elif trainer_info_dict[trainer_id]["belong_area"]!=race_result_dict[trainer_id]["belong_area"]:
+                belong_area=race_result_dict[trainer_id]["belong_area"]
+                belong_update=now
+            elif trainer_info_dict[trainer_id]["last_run"]!=race_result_dict[trainer_id]["last_run"]:
+                last_run=race_result_dict[trainer_id]["last_run"]
+            data=[active,belong_area,belong_update,last_run]
+            updata_array.append(data)
+
+        #insert
+        if len(insert_array)!=0:
+            insert_sql="insert into trainer_info values((%s,%s,%s,%s,%s,%s,%s)"
+            cursor.executemany(insert_sql, insert_array)
+            conn.commit()
+            print("インサート処理が完了しました")
+
+        #update
+        if len(updata_array)!=0:
+            updata_query="updata trainer_info set active=%s,belong_area=%s,belong_update=%s,last_run=%s where trainer_id="+trainer_id+";"
+            cursor.executemany(updata_query, updata_array)
+            conn.commit()
+            print("アップデート処理が完了しました。")
 
 def insert_jockey_info():
     pass
-
-
 
 
 
