@@ -16,7 +16,7 @@ import subprocess
 def main():
     now= date.today().strftime("%Y%m%d")
     conn,cursor=connect_mysql()
-    #make_dir()
+    # make_dir()
     # insert_race_result_csv_dir=config.insert_race_result_csv_dir
     # insert_odds_csv_dir=config.insert_odds_csv_dir
     # insert_horse_csv_dir=config.insert_horse_csv_dir
@@ -29,37 +29,56 @@ def main():
     #     #csvファイルは一つしかない想定なので[0]固定
     #     target_file=race_result_filenam_array[0]
     #     target_file_path=insert_race_result_csv_dir+"\\"+target_file
-    #     race_result_inssert_data,fixed_flag=check_data(target_file_path)
-    #     race_result_duble_array=convert_form_dict_to_list(race_result_inssert_data)
-    #     if fixed_flag==1:
-    #         export_csv(target_file_path,race_result_duble_array)
+    #     target_dict,fixed_flag=check_data(target_file_path)
+    #     if fixed_flag!=1:
+    #       from_dict_to_converted_array=convert_form_dict_to_list(target_dict)   
+    #       make_csv(target_file_path,from_dict_to_converted_array)
+    #       fixed_flag=0
 
-    #mysqlのdump（バックアップを取得処理を追加する）
-    #dump_mysql()
+    # #mysqlのdump（バックアップを取得処理を追加する）
+    # dump_mysql()
            
-    #     insert_race_result(race_result_duble_array,conn,cursor)
-    #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
-    #     move_file(insert_race_result_csv_dir,race_result_filenam_array)
+    # insert_race_result(from_dict_to_converted_array,conn,cursor)
+    # race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+    # move_file(insert_race_result_csv_dir,race_result_filenam_array)
 
-    # while len(horse_array)!=0:
-    #     target_file=horse_array[0]
-    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
-    #     insert_horse(target_file_path,conn,cursor)
-    #     move_file(target_file_path)
+    # #馬情報の処理
+    # target_file=horse_array[0]
+    # target_file_path=insert_horse_csv_dir+"\\"+target_file
+    # insert_horse(target_file_path,conn,cursor)
+    # move_file(target_file_path)
 
-    # while len(odds_array)!=0:
-    #     target_file=odds_array[0]
-    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
-    #     insert_odds(target_file_path,target_file,conn,cursor)
-    #     move_file(target_file_path)
+    # #オッズ情報の処理
+    # target_file=odds_array[0]
+    # target_file_path=insert_odds_csv_dir+"\\"+target_file
+    # insert_odds(target_file_path,target_file,conn,cursor)
+    # move_file(target_file_path)
 
     #trainer_infoの処理
-    insert_trainer_info(conn,cursor)
+    insert_array,updata_array=make_trainer_data(cursor)
+    if len(insert_array)!=0:
+        for_insert_and_make_csv_array=insert_array
+        target_file_path=config.output_csv+"\\trainer_info_insert.csv"
+        fixed_flag=3
+        make_csv_array=insert_array
+        make_csv(target_file_path,fixed_flag,make_csv_array)
+        insert_array=make_csv_array
+        insert_trainer_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        for_insert_and_make_csv_array=updata_array
+        target_file_path=config.output_csv+"//trainer_info_update.csv"
+        fixed_flag=3
+        make_csv_array=updata_array
+        make_csv(target_file_path,fixed_flag,make_csv_array)
+        updata_array=make_csv_array
+        updata_trainer_info(updata_array,cursor)
 
     #jockey_infoの処理
+    convert_form_dict_to_list()
     insert_jockey_info()
 
-    #jockey_infoの処理
+    #すべてのcsvをファイルサーバーに移動する
+    export_csv_to_fileserver()
     print("すべての処理完了！！")
     
 def connect_mysql():
@@ -107,9 +126,9 @@ def horsde_get_filename(insert_horse_csv_dir):
     return horse_array
 
 #レース情報の処理
-def insert_race_result(race_result_inssert_data,conn,cursor):
+def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
     insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    cursor.executemany(insert_query, race_result_inssert_data)
+    cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
 
@@ -419,7 +438,7 @@ def convert_null(data):
         seach_count=seach_count+1
     return data
         
-def move_file(insert_race_result_csv_dir,race_result_filenam_array):
+def move_file(race_result_filenam_array,insert_race_result_csv_dir):
     dest_path_dir=config.processed_file_path
     #送信元のパスと宛先のパスを生成する
     for r in race_result_filenam_array:
@@ -430,7 +449,7 @@ def move_file(insert_race_result_csv_dir,race_result_filenam_array):
         shutil.move(sorce_path,dest_path)
     print("csvファイルの移動が完了しました")
 
-def insert_trainer_info(conn,cursor):
+def make_trainer_data(cursor):
     trainer_info_dict={}
     race_result_dict={}
     insert_array=[]
@@ -467,18 +486,19 @@ def insert_trainer_info(conn,cursor):
 
     #辞書からトレーナーIDが存在しない場合noneを返す
     for trainer_id in trainer_id_array:
-        value=race_result_dict.get(trainer_id,None)
+        value=trainer_info_dict.get(trainer_id,None)
 
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
         if value==None:
-            trainer_name=race_result_dict[trainer_id]["trainer"]
-            belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
+            trainer_name=race_result_dict[trainer_id][1]
+            belong_area=race_result_dict[trainer_id][2]
             belong_update=None
             active=1
-            first_run=race_result_dict[trainer_id]["first_run"]
-            last_run=race_result_dict[trainer_id]["last_run"]
+            first_run=race_result_dict[trainer_id][3]
+            last_run=race_result_dict[trainer_id][4]
             data=[trainer_id,trainer_name,belong_area,belong_update,active,first_run,last_run]
+            #trainer_idで重複チェックする
             insert_array.append(data)
             continue
        
@@ -501,28 +521,30 @@ def insert_trainer_info(conn,cursor):
                 belong_update=now
             elif trainer_info_dict[trainer_id]["last_run"]!=race_result_dict[trainer_id]["last_run"]:
                 last_run=race_result_dict[trainer_id]["last_run"]
-            data=[active,belong_area,belong_update,last_run]
+            data=[active,belong_area,belong_update,last_run,trainer_id]
+            #trainer_idで重複チェックする
             updata_array.append(data)
 
-        #insert
-        if len(insert_array)!=0:
-            insert_sql="insert into trainer_info values((%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_sql, insert_array)
-            conn.commit()
-            print("インサート処理が完了しました")
+            #insert_arrayとupdata_arrayが重複してないかチェックする
 
-        #update
-        if len(updata_array)!=0:
-            updata_query="updata trainer_info set active=%s,belong_area=%s,belong_update=%s,last_run=%s where trainer_id="+trainer_id+";"
-            cursor.executemany(updata_query, updata_array)
-            conn.commit()
-            print("アップデート処理が完了しました。")
+    return insert_array,updata_array
+        
+def insert_trainer_info(insert_array,conn,cursor):
+    #インサート処理
+    insert_sql="insert into trainer_info(trainer_id,trainer_name,trainer_belong_area,belong_update,active,firist_run,last_run) values(%s,%s,%s,%s,%s,%s,%s)"
+    cursor.executemany(insert_sql, insert_array)
+    conn.commit()
+    print("インサート処理が完了しました")
+
+def updata_trainer_info(updata_array,conn,cursor):
+    #updata処理
+    updata_query="updata trainer_info set active=%s,belong_area=%s,belong_update=%s,last_run=%s where trainer_id=%s;"
+    cursor.executemany(updata_query, updata_array)
+    conn.commit()
+    print("アップデート処理が完了しました。")
 
 def insert_jockey_info():
     pass
-
-
-
 
 def check_data(target_file_path):
     race_result_inssert_data={}
@@ -591,21 +613,35 @@ def check_data(target_file_path):
             sent_mail(sent_mail_array)
         return race_result_inssert_data,fixed_flag
 
-def export_csv(target_file_path,race_result_duble_array):
+def make_csv(target_file_path,fixed_flag,make_csv_array):
     csv_outpath=target_file_path
     csv_outpath=csv_outpath.replace(".csv","")
     csv_outpath=csv_outpath+"_fixed.csv"
 
-    header=["race_id","year,month","day","weekday","kai","nitime","race_number","race_name","place","course_distance","track","course_type","horseage_conditions","race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition",
+    #race_resultの場合
+    if fixed_flag==1:
+        header=["race_id","year,month","day","weekday","kai","nitime","race_number","race_name","place","course_distance","track","course_type","horseage_conditions","race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition",
             "start_race_time","entry","wakuban","umaban","horse_name","horse_id","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey","jockey_id","jockey_belong_area","belong_area",
             "trainer","trainer_id","trainer_belong_area","abnormal_code","rank","race_time","corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
 
-    race_result_duble_array.insert(0,header)
+        make_csv_array.insert(0,header)
+    
+    #horse_idの場合
+    elif fixed_flag==2:
+        pass
+
+    #trainer_infoの場合
+    elif fixed_flag==3:
+        pass
+    
+    #jockey_infoの場合
+    elif fixed_flag==4:
+        pass
 
     with open(csv_outpath, mode="w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-        writer.writerows(race_result_duble_array)    
-    return race_result_duble_array
+        writer.writerows(make_csv_array)    
+    return
 
 def sent_mail(sent_mail_array):
     str_count=0
@@ -662,21 +698,21 @@ def sent_mail(sent_mail_array):
         print(e)
         return None
 
-def convert_form_dict_to_list(race_result_inssert_data):
-    race_result_duble_array=[]
-    for e in race_result_inssert_data.values():
-        race_result_duble_array.extend(e)
-    return race_result_duble_array
+def convert_form_dict_to_list(for_insert_and_make_csv_array):
+    from_dict_to_converted_array=[]
+    for e in for_insert_and_make_csv_array.values():
+        from_dict_to_converted_array.extend(e)
+    return from_dict_to_converted_array
     
 def dump_mysql():
-    now= date.today().strftime("%Y%m%d")
     subprocess.run(["ssh","root@192.168.1.108","bash","/root/mysql/script/make_dump_and_move"])
 
 def make_dir():
     #公開鍵認証必須
     subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/make_dir"])
 
-
+def export_csv_to_fileserver():
+    subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/pull_csv_windows"])
 
 
 
