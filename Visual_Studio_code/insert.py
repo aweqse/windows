@@ -21,6 +21,11 @@ import subprocess
 #④trainer_info,jockey_infoを一度insertする
 #⑥差分(2026年分)をダウンロードしてinsert.pyの一連の処理が正しく行われることの確認
 #⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
+#⑧本番環境のVMを建てて環境構築をなるべく自動化(win-getとpowershellで）する
+#⑨mysqlで集約したテーブルを作るスクリプトを作る
+#⑩推論csvのスクリプトを完成させる
+
+
 
 def main():
     now= date.today().strftime("%Y%m%d")
