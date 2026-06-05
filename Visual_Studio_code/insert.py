@@ -13,6 +13,15 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 import os
 import subprocess
 
+#-------20260605-------
+#これからやること
+#①jockey_infoをtrainer_infoを手本に一連の処理を完成させる
+#②出力、修正したファイルを全て~csvファイルに移動するように処理を変更する
+#③全てのファイルをサーバーに転送させる処理を追加する
+#④trainer_info,jockey_infoを一度insertする
+#⑥差分(2026年分)のcsvを読み込ませせてupdate処理とファイル転送の処理の確認
+#⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
+
 def main():
     now= date.today().strftime("%Y%m%d")
     conn,cursor=connect_mysql()
@@ -437,6 +446,7 @@ def convert_null(data):
     return data
         
 def move_file(race_result_filenam_array,insert_race_result_csv_dir):
+    #転送先を〜csvフォルダにする
     dest_path_dir=config.processed_file_path
     #送信元のパスと宛先のパスを生成する
     for r in race_result_filenam_array:
