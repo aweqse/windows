@@ -57,7 +57,6 @@ def main():
     #trainer_infoの処理
     insert_array,updata_array=make_trainer_data(cursor)
     if len(insert_array)!=0:
-        for_insert_and_make_csv_array=insert_array
         target_file_path=config.output_csv+"\\trainer_info_insert.csv"
         fixed_flag=3
         make_csv_array=insert_array
@@ -65,7 +64,6 @@ def main():
         insert_array=make_csv_array
         insert_trainer_info(insert_array,conn,cursor)
     elif len(updata_array)!=0:
-        for_insert_and_make_csv_array=updata_array
         target_file_path=config.output_csv+"//trainer_info_update.csv"
         fixed_flag=3
         make_csv_array=updata_array
@@ -499,7 +497,8 @@ def make_trainer_data(cursor):
             last_run=race_result_dict[trainer_id][4]
             data=[trainer_id,trainer_name,belong_area,belong_update,active,first_run,last_run]
             #trainer_idで重複チェックする
-            insert_array.append(data)
+            if trainer_id in insert_array:
+                insert_array.append(data)
             continue
        
         #trainer_infoの配列をactiveとbelong_areaをCheckして当てはまればかきかえる。
@@ -523,10 +522,8 @@ def make_trainer_data(cursor):
                 last_run=race_result_dict[trainer_id]["last_run"]
             data=[active,belong_area,belong_update,last_run,trainer_id]
             #trainer_idで重複チェックする
-            updata_array.append(data)
-
-            #insert_arrayとupdata_arrayが重複してないかチェックする
-
+            if trainer_id in insert_array:
+                updata_array.append(data)
     return insert_array,updata_array
         
 def insert_trainer_info(insert_array,conn,cursor):
