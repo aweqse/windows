@@ -497,9 +497,11 @@ def make_trainer_data(cursor):
             last_run=race_result_dict[trainer_id][4]
             data=[trainer_id,trainer_name,belong_area,belong_update,active,first_run,last_run]
             #trainer_idで重複チェックする
-            if trainer_id in insert_array:
+            if data in insert_array:
+                continue
+            else:
                 insert_array.append(data)
-            continue
+                continue
        
         #trainer_infoの配列をactiveとbelong_areaをCheckして当てはまればかきかえる。
         #書き換えたら必ず､差分がでるのでupdata.arrayrrに格納する
@@ -522,7 +524,9 @@ def make_trainer_data(cursor):
                 last_run=race_result_dict[trainer_id]["last_run"]
             data=[active,belong_area,belong_update,last_run,trainer_id]
             #trainer_idで重複チェックする
-            if trainer_id in insert_array:
+            if data in insert_array:
+                continue
+            else:
                 updata_array.append(data)
     return insert_array,updata_array
         
@@ -621,20 +625,19 @@ def make_csv(target_file_path,fixed_flag,make_csv_array):
             "start_race_time","entry","wakuban","umaban","horse_name","horse_id","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey","jockey_id","jockey_belong_area","belong_area",
             "trainer","trainer_id","trainer_belong_area","abnormal_code","rank","race_time","corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
 
-        make_csv_array.insert(0,header)
-    
     #horse_idの場合
     elif fixed_flag==2:
         pass
 
     #trainer_infoの場合
     elif fixed_flag==3:
-        pass
+        header=["trainer_id","trainer_name","trainer_belong_area","belong_updata","active","firist_run","last_run"]
     
     #jockey_infoの場合
     elif fixed_flag==4:
         pass
-
+    
+    make_csv_array.insert(0,header)
     with open(csv_outpath, mode="w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(make_csv_array)    
