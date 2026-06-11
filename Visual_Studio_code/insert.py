@@ -15,14 +15,17 @@ import subprocess
 
 #-------20260605-------
 #これからやること
+#いんさーと、クエリに失敗した場合カラムの順番をいれかえたことを疑う
 #①jockey_infoをtrainer_infoを手本に一連の処理を完成させる
+#insert_horseの処理を書き直す
 #②出力、修正したファイルを全て~csvファイルに移動するように処理を変更する
+#googledriveに自動アップロードするスクリプトを書く
 #③全てのファイルをサーバーに転送させる処理を追加する(ファイルサーバー側のスクリプトを呼ぶ形にする)
 #④trainer_info,jockey_infoを一度insertする
+#集約テーブルを作成してupdateするクエリを作り呼び出す処理を書く
 #⑥差分(2026年分)をダウンロードしてinsert.pyの一連の処理が正しく行われることの確認
 #⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
 #⑧本番環境のVMを建てて環境構築をなるべく自動化(win-getとpowershellで）する
-#⑨mysqlで集約したテーブルを作るスクリプトを作る
 #⑩推論csvのスクリプトを完成させる
 
 
@@ -69,25 +72,24 @@ def main():
     # move_file(target_file_path)
 
     #trainer_infoの処理
-    insert_array,updata_array=make_trainer_data(cursor)
-    if len(insert_array)!=0:
-        target_file_path=config.output_csv+"\\trainer_info_insert.csv"
-        fixed_flag=3
-        make_csv_array=insert_array
-        make_csv(target_file_path,fixed_flag,make_csv_array)
-        insert_array=make_csv_array
-        insert_trainer_info(insert_array,conn,cursor)
-    elif len(updata_array)!=0:
-        target_file_path=config.output_csv+"//trainer_info_update.csv"
-        fixed_flag=3
-        make_csv_array=updata_array
-        make_csv(target_file_path,fixed_flag,make_csv_array)
-        updata_array=make_csv_array
-        updata_trainer_info(updata_array,cursor)
+    # insert_array,updata_array,race_result_array=make_trainer_data(cursor)
+    # if len(insert_array)!=0:
+    #     target_file_path=config.output_csv+"\\trainer_info_insert.csv"
+    #     fixed_flag=3
+    #     make_csv_array=insert_array
+    #     make_csv(target_file_path,fixed_flag,make_csv_array)
+    #     insert_array=make_csv_array
+    #     insert_trainer_info(insert_array,conn,cursor)
+    # elif len(updata_array)!=0:
+    #     target_file_path=config.output_csv+"//trainer_info_update.csv"
+    #     fixed_flag=3
+    #     make_csv_array=updata_array
+    #     make_csv(target_file_path,fixed_flag,make_csv_array)
+    #     updata_array=make_csv_array
+    #     updata_trainer_info(updata_array,cursor)
 
     #jockey_infoの処理
-    convert_form_dict_to_list()
-    insert_jockey_info()
+
 
     #すべてのcsvをファイルサーバーに移動する
     export_csv_to_fileserver()
@@ -139,7 +141,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
@@ -155,7 +157,7 @@ def insert_horse(target_file_path,conn,cursor):
     today = date.today()
 
     #insertかupdateか判断するための配列を取得
-    judge_query="select horse_id,sex,trainer_name,trainer_id,owner_name,owner_id,final_run_day,reject_jra_date,trainer_belong_area from horse_info;"
+    judge_query="select horse_id,sex,trainer_id,trainer_name,owner_name,owner_id,final_run_day,reject_jra_date,trainer_belong_area from horse_info;"
     cursor.execute(judge_query)
     judge_data_array = cursor.fetchall()
     print("差分比較用の情報取得完了")
@@ -466,84 +468,90 @@ def make_trainer_data(cursor):
     trainer_info_dict={}
     race_result_dict={}
     insert_array=[]
-    trainer_id_array=[]
     updata_array=[]
     now= date.today().strftime("%Y%m%d")
 
     #race_resultから更新候補の一覧を取得する
-    make_dict_query="select trainer_id,trainer,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer,trainer_belong_area;"
+    make_dict_query="select trainer_id,trainer_name,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer_name,trainer_belong_area;"
     cursor.execute(make_dict_query)
-    race_result_array = cursor.fetchall()
+    trainer_race_result_array = cursor.fetchall()
 
     #辞書を作成する
-    if len(race_result_array)!=0:
-        for row in race_result_array:
-            trainer_id=row["trainer_id"]
-            trainer_id_array.append(trainer_id)
-            race_result_data=[row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["first_run"],row["last_run"]]
-            race_result_dict[row["trainer_id"]]=race_result_data
-        print("比較元の辞書作成完了")
+    if len(trainer_race_result_array)!=0:
+        for row in trainer_race_result_array:
+            race_result_dict[row["trainer_id"]]={"trainer_name":row["trainer_name"],"trainer_belong_area":row["trainer_belong_area"],"first_run":row["first_run"],"last_run":row["last_run"]}
+        print("race_resultからの情報取得完了")
 
     #trainer_infoから更新候補と比較して差分があればupdate処理、noneならinsert処理に分岐する
-    compare_count_query="select trainer_id,trainer_belong_area,last_run from trainer_info;"
-    cursor.execute(compare_count_query)
+    trainer_info_query="select * from trainer_info;"
+    cursor.execute(trainer_info_query)
     trainer_info_array = cursor.fetchall()
 
     #activeは全部のカラムが対象なので辞書とは別に全部の要素を配列に入れて全配列チェックする
     if len(trainer_info_array)!=0:
         for row in trainer_info_array:
             #updateの可能性があるので全部の要素を辞書に入れる
-            trainer_info_data=[row["trainer_id"],row["trainer_name"],row["trainer_belong_area"],row["belong_update"],row["active"],row["first_run"],row["last_run"]]
-            trainer_info_dict[row["trainer_id"]]=trainer_info_data
-        print("比較先の辞書作成完了")
+            trainer_info_dict[row["trainer_id"]]={"trainer_name":row["trainer_name"],"trainer_belong_area":row["trainer_belong_area"],"belong_update":row["belong_update"],"first_run":row["first_run"],"active":row["active"],"last_run":row["last_run"]}
+        print("trainer_infoからの情報取得完了")
 
     #辞書からトレーナーIDが存在しない場合noneを返す
-    for trainer_id in trainer_id_array:
+    for trainer_id in race_result_dict.keys():
         value=trainer_info_dict.get(trainer_id,None)
 
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
         if value==None:
-            trainer_name=race_result_dict[trainer_id][1]
-            belong_area=race_result_dict[trainer_id][2]
+            trainer_name=race_result_dict[trainer_id]["trainer_name"]
+            belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
             belong_update=None
             active=1
-            first_run=race_result_dict[trainer_id][3]
-            last_run=race_result_dict[trainer_id][4]
+            first_run=race_result_dict[trainer_id]["first_run"]
+            last_run=race_result_dict[trainer_id]["last_run"]
             data=[trainer_id,trainer_name,belong_area,belong_update,active,first_run,last_run]
             #trainer_idで重複チェックする
-            if data in insert_array:
-                continue
-            else:
-                insert_array.append(data)
-                continue
-       
+            insert_array.append(data)
+            continue
+    
         #trainer_infoの配列をactiveとbelong_areaをCheckして当てはまればかきかえる。
         #書き換えたら必ず､差分がでるのでupdata.arrayrrに格納する
         #書き替えがない場合は比較して差分があればupdata.arraに格納する。
-        if race_result_dict[trainer_id]!=trainer_info_dict[trainer_id]:
-            # 初期値
-            active=trainer_info_dict[trainer_id]["active"]     
-            belong_area=trainer_info_dict[trainer_id]["belong_area"]
-            belong_update=trainer_info_dict[trainer_id]["belong_update"]
-            last_run=trainer_info_dict[trainer_id]["last_run"]
-
-             #active_checkのチェック 
-            if int(race_result_dict[trainer_id]["last_run"])+20000>now:
+        # 初期値
+        active=trainer_info_dict[trainer_id]["active"]     
+        belong_area=trainer_info_dict[trainer_id]["trainer_belong_area"]
+        belong_update=trainer_info_dict[trainer_id]["belong_update"]
+        last_run=trainer_info_dict[trainer_id]["last_run"]
+        updata_flag=0
+            #active_checkのチェック 
+        if active!=0:
+            if int(race_result_dict[trainer_id]["last_run"])+20000<int(now):
                 active=0
+                updata_flag=1
             #belong_area_check       
-            elif trainer_info_dict[trainer_id]["belong_area"]!=race_result_dict[trainer_id]["belong_area"]:
-                belong_area=race_result_dict[trainer_id]["belong_area"]
+            if trainer_info_dict[trainer_id]["trainer_belong_area"]!=race_result_dict[trainer_id]["trainer_belong_area"]:
+                belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
                 belong_update=now
-            elif trainer_info_dict[trainer_id]["last_run"]!=race_result_dict[trainer_id]["last_run"]:
+                updata_flag=1
+            if trainer_info_dict[trainer_id]["last_run"]!=race_result_dict[trainer_id]["last_run"]:
                 last_run=race_result_dict[trainer_id]["last_run"]
-            data=[active,belong_area,belong_update,last_run,trainer_id]
-            #trainer_idで重複チェックする
-            if data in insert_array:
-                continue
-            else:
+                updata_flag=1
+
+            if updata_flag==1:
+                data=[active,belong_area,belong_update,last_run,trainer_id]
                 updata_array.append(data)
+                print("差分あり、updata配列に格納")
+            else:
+                print("差分なし")
+        else:
+            print("更新対象外です")
+            
+
     return insert_array,updata_array
+
+def make_jockey_info():
+    jockey_info_query="select "
+
+
+
         
 def insert_trainer_info(insert_array,conn,cursor):
     #インサート処理
@@ -575,13 +583,14 @@ def check_data(target_file_path):
     with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            #インサート用の辞書を作成
+            #インサート用の辞書を作成t
+            #騎手の所属やフリーの状態のカラムを足す
             data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
                 row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
                 row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
-                row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_name"],row["horse_id"],row["sex"],row["horse_age"],
-                row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey"],row["jockey_id"],row["jockey_belong_area"],
-                row["belong_area"],row["trainer"],row["trainer_id"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
+                row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
+                row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey_name"],row["jockey_belong_area"],
+                row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer_name"],row["trainer_id"],row["trainer_name"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
                 row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
             
             #nullチェックをする
@@ -728,6 +737,9 @@ def make_dir():
 
 def export_csv_to_fileserver():
     subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/pull_csv_windows"])
+
+def delete_export_file():
+    pass
 
 
 

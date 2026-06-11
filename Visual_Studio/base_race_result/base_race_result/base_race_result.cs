@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices; 
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using static JVData_Struct;
-
 
 class Program
 {
@@ -43,6 +42,9 @@ class Program
     // JVOpen後、dl > 0 の場合に最初に待つ時間
     static readonly int InitialDownloadWaitMs = 30000;
 
+    // KS/CHマスタのデバッグ出力件数
+    static readonly int MasterDebugSampleLimit = 5;
+
     [STAThread]
     static void Main(string[] args)
     {
@@ -50,9 +52,6 @@ class Program
 
         // 通常運用：
         // 今日の日付を基準にして「先週の月曜〜日曜」を自動取得する。
-        // 例:
-        //   今日が 2026-05-16(土) → 2026-05-04(月)〜2026-05-10(日)
-        //   今日が 2026-05-18(月) → 2026-05-11(月)〜2026-05-17(日)
         DateTime startDate = GetLastWeekMonday(DateTime.Today);
         DateTime endDate = startDate.AddDays(6);
 
@@ -64,9 +63,8 @@ class Program
         // =========================
         // 範囲を直接指定したい場合は、下の2行のコメントアウトを外して日付を変更する。
         // 例: 2024年の1年分を取得する場合
-        //
-        // startDateText = "20240101";
-        // endDateText = "20241231";
+        startDateText = "20250101";
+        endDateText = "20251231";
 
         // exe引数で開始日・終了日を渡した場合は、引数を最優先する。
         // 例:
@@ -140,9 +138,22 @@ class Program
         var jockeyBelongMap = new Dictionary<string, string>(StringComparer.Ordinal);
         var trainerBelongMap = new Dictionary<string, string>(StringComparer.Ordinal);
 
-        // 騎手所属・調教師所属を先にマスタから取得する。
-        // KS = 騎手マスタ、CH = 調教師マスタを想定。
-        LoadBelongMasters(jv, raceFromTime, OpenOption, jockeyBelongMap, trainerBelongMap);
+        // KS騎手マスタから、騎手がフリーかどうかも取得する。
+        // free: 0=厩舎所属, 1=フリー, 空文字=判定不能
+        var jockeyFreeMap = new Dictionary<string, string>(StringComparer.Ordinal);
+        var jockeyBelongTrainerIdMap = new Dictionary<string, string>(StringComparer.Ordinal);
+        var jockeyBelongTrainerNameMap = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        LoadBelongMasters(
+            jv,
+            raceFromTime,
+            OpenOption,
+            jockeyBelongMap,
+            trainerBelongMap,
+            jockeyFreeMap,
+            jockeyBelongTrainerIdMap,
+            jockeyBelongTrainerNameMap
+        );
 
         ExportRaceResult(
             jv,
@@ -152,7 +163,10 @@ class Program
             startDate,
             endDate,
             jockeyBelongMap,
-            trainerBelongMap
+            trainerBelongMap,
+            jockeyFreeMap,
+            jockeyBelongTrainerIdMap,
+            jockeyBelongTrainerNameMap
         );
 
         Console.WriteLine("Press Enter...");
@@ -168,7 +182,10 @@ class Program
         string fromTime,
         int option,
         Dictionary<string, string> jockeyBelongMap,
-        Dictionary<string, string> trainerBelongMap
+        Dictionary<string, string> trainerBelongMap,
+        Dictionary<string, string> jockeyFreeMap,
+        Dictionary<string, string> jockeyBelongTrainerIdMap,
+        Dictionary<string, string> jockeyBelongTrainerNameMap
     )
     {
         Console.WriteLine("所属マスタ読み込み開始 DIFF");
@@ -178,7 +195,7 @@ class Program
 
         if (ksParser == null)
         {
-            Console.WriteLine("[WARN] KS 騎手マスタのパーサ型が見つかりません。jockey_belong_area はNULLになりやすくなります。");
+            Console.WriteLine("[WARN] KS 騎手マスタのパーサ型が見つかりません。jockey_belong_area / jockey_free 系はNULLになりやすくなります。");
             DumpTypesHint("KS");
         }
 
@@ -224,6 +241,7 @@ class Program
         int chCount = 0;
         int ksNoBelongCount = 0;
         int chNoBelongCount = 0;
+        int ksDebugDumpCount = 0;
 
         while (true)
         {
@@ -329,9 +347,46 @@ class Program
                 string jockeyId = GetJockeyIdFromMaster(ksDict);
                 string belongArea = GetBelongAreaFromMaster(ksDict, "Kisyu", "Jockey");
 
-                if (jockeyId.Length != 0 && belongArea.Length != 0)
+                // 修正:
+                // KS騎手マスタでは、所属調教師が ChokyosiCode / ChokyosiRyakusyo 系で入っている可能性が高い。
+                // 以前の SyozokuChokyosi / BelongTrainer 系だけだと拾えず、全NULLになりやすい。
+                string belongTrainerId = GetJockeyBelongTrainerIdFromMaster(ksDict);
+                string belongTrainerName = GetJockeyBelongTrainerNameFromMaster(ksDict);
+                bool masterHasFreeText = MasterContainsFreeText(ksDict);
+                string free = JudgeJockeyFree(belongTrainerId, belongTrainerName, masterHasFreeText);
+
+                if (ksDebugDumpCount < MasterDebugSampleLimit &&
+                    jockeyId.Length != 0 &&
+                    belongTrainerId.Length == 0 &&
+                    belongTrainerName.Length == 0)
                 {
-                    jockeyBelongMap[jockeyId] = belongArea;
+                    Console.WriteLine("[DEBUG] KSで所属調教師が拾えないサンプル jockeyId=" + jockeyId + " file=" + fileName);
+                    DumpImportantMasterKeys("KS", ksDict);
+                    ksDebugDumpCount++;
+                }
+
+                if (jockeyId.Length != 0)
+                {
+                    if (belongArea.Length != 0)
+                    {
+                        jockeyBelongMap[jockeyId] = belongArea;
+                    }
+
+                    if (belongTrainerId.Length != 0)
+                    {
+                        jockeyBelongTrainerIdMap[jockeyId] = belongTrainerId;
+                    }
+
+                    if (belongTrainerName.Length != 0)
+                    {
+                        jockeyBelongTrainerNameMap[jockeyId] = belongTrainerName;
+                    }
+
+                    if (free.Length != 0)
+                    {
+                        jockeyFreeMap[jockeyId] = free;
+                    }
+
                     ksCount++;
                 }
                 else
@@ -379,6 +434,9 @@ class Program
 
         Console.WriteLine("所属マスタ読み込み完了");
         Console.WriteLine("jockeyBelongMap count=" + jockeyBelongMap.Count + ", KS loaded=" + ksCount + ", KS no belong=" + ksNoBelongCount);
+        Console.WriteLine("jockeyFreeMap count=" + jockeyFreeMap.Count);
+        Console.WriteLine("jockeyBelongTrainerIdMap count=" + jockeyBelongTrainerIdMap.Count);
+        Console.WriteLine("jockeyBelongTrainerNameMap count=" + jockeyBelongTrainerNameMap.Count);
         Console.WriteLine("trainerBelongMap count=" + trainerBelongMap.Count + ", CH loaded=" + chCount + ", CH no belong=" + chNoBelongCount);
     }
 
@@ -420,6 +478,264 @@ class Program
         }
 
         return ToIntText(v);
+    }
+
+    static string GetJockeyBelongTrainerIdFromMaster(Dictionary<string, string> d)
+    {
+        // 重要:
+        // JV_KS_KISYU では、騎手の所属調教師が単純に ChokyosiCode / ChokyosiRyakusyo 系で入る可能性がある。
+        // そのため SyozokuChokyosi / BelongTrainer 系だけでなく、ChokyosiCode 系も必ず候補に入れる。
+        string v = Pick(
+            d,
+            "ChokyosiCode",
+            "ChokyosiCD",
+            "ChokyosiCd",
+            "TrainerCode",
+            "TrainerCD",
+            "TrainerCd",
+            "SyozokuChokyosiCode",
+            "SyozokuChokyosiCD",
+            "SyozokuChokyosiCd",
+            "ShozokuChokyosiCode",
+            "ShozokuChokyosiCD",
+            "ShozokuChokyosiCd",
+            "BelongTrainerCode",
+            "BelongTrainerCD",
+            "BelongTrainerCd",
+            "BelongChokyosiCode",
+            "BelongChokyosiCD",
+            "BelongChokyosiCd"
+        );
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Chokyosi", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Chokyosi", "CD");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Trainer", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Trainer", "CD");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Syozoku", "Chokyosi", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Syozoku", "Chokyosi", "CD");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Shozoku", "Chokyosi", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Shozoku", "Chokyosi", "CD");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Trainer", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Trainer", "CD");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Chokyosi", "Code");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Chokyosi", "CD");
+        }
+
+        return ToIntText(v);
+    }
+
+    static string GetJockeyBelongTrainerNameFromMaster(Dictionary<string, string> d)
+    {
+        // 重要:
+        // JV_KS_KISYU では、所属調教師名が ChokyosiRyakusyo / ChokyosiName 系で入る可能性がある。
+        string v = Pick(
+            d,
+            "ChokyosiRyakusyo",
+            "ChokyosiName",
+            "TrainerRyakusyo",
+            "TrainerName",
+            "SyozokuChokyosiName",
+            "SyozokuChokyosiRyakusyo",
+            "ShozokuChokyosiName",
+            "ShozokuChokyosiRyakusyo",
+            "BelongTrainerName",
+            "BelongTrainerRyakusyo",
+            "BelongChokyosiName",
+            "BelongChokyosiRyakusyo"
+        );
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Chokyosi", "Ryakusyo");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Chokyosi", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Trainer", "Ryakusyo");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Trainer", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Syozoku", "Chokyosi", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Syozoku", "Chokyosi", "Ryakusyo");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Shozoku", "Chokyosi", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Shozoku", "Chokyosi", "Ryakusyo");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Trainer", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Trainer", "Ryakusyo");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Chokyosi", "Name");
+        }
+
+        if (v.Length == 0)
+        {
+            v = PickByKeyContainsAll(d, "Belong", "Chokyosi", "Ryakusyo");
+        }
+
+        v = Norm(v);
+
+        // 数字だけなら名前としては採用しない。
+        // IDは GetJockeyBelongTrainerIdFromMaster 側で扱う。
+        if (IsSignedInteger(v))
+        {
+            return "";
+        }
+
+        return v;
+    }
+
+    static bool MasterContainsFreeText(Dictionary<string, string> d)
+    {
+        if (d == null)
+        {
+            return false;
+        }
+
+        foreach (var kv in d)
+        {
+            string key = Norm(kv.Key);
+            string value = Norm(kv.Value);
+
+            if (key.IndexOf("Free", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                if (value == "1")
+                {
+                    return true;
+                }
+            }
+
+            if (value.IndexOf("フリー", StringComparison.Ordinal) >= 0)
+            {
+                return true;
+            }
+
+            if (value.IndexOf("所属なし", StringComparison.Ordinal) >= 0)
+            {
+                return true;
+            }
+
+            if (value.Equals("FREE", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static string JudgeJockeyFree(string belongTrainerId, string belongTrainerName, bool masterHasFreeText)
+    {
+        belongTrainerId = ToIntText(belongTrainerId);
+        belongTrainerName = Norm(belongTrainerName);
+
+        if (masterHasFreeText || belongTrainerName.IndexOf("フリー", StringComparison.Ordinal) >= 0)
+        {
+            return "1";
+        }
+
+        if (belongTrainerName.IndexOf("所属なし", StringComparison.Ordinal) >= 0)
+        {
+            return "1";
+        }
+
+        // JRA-VAN側で所属なしを 0 / 99999 のような値で表す場合に備える。
+        if (belongTrainerId == "0" || belongTrainerId == "99999")
+        {
+            return "1";
+        }
+
+        // 所属調教師IDが取れた場合は厩舎所属。
+        if (belongTrainerId.Length != 0)
+        {
+            return "0";
+        }
+
+        // 所属調教師名が取れた場合も厩舎所属。
+        if (belongTrainerName.Length != 0)
+        {
+            return "0";
+        }
+
+        // 判定不能。DB投入時はNULL扱いにする想定。
+        return "";
     }
 
     static string GetBelongAreaFromMaster(Dictionary<string, string> d, params string[] ownerTokens)
@@ -568,8 +884,6 @@ class Program
             return NormalizeBelongArea(v);
         }
 
-        // SEのTozaiCDは従来belong_areaに使っていた値。
-        // レース結果SEでは調教師・厩舎所属寄りの値として扱う。
         v = Pick(se, "TozaiCD", "Tozai");
 
         return NormalizeBelongArea(v);
@@ -587,7 +901,10 @@ class Program
         DateTime startDate,
         DateTime endDate,
         Dictionary<string, string> jockeyBelongMap,
-        Dictionary<string, string> trainerBelongMap
+        Dictionary<string, string> trainerBelongMap,
+        Dictionary<string, string> jockeyFreeMap,
+        Dictionary<string, string> jockeyBelongTrainerIdMap,
+        Dictionary<string, string> jockeyBelongTrainerNameMap
     )
     {
         int readCount = 0;
@@ -624,13 +941,6 @@ class Program
             return;
         }
 
-        // 修正方針:
-        // 以前のコードでは SyussoTosu 件数に達した時点で raMap を削除していた。
-        // しかし、SyussoTosu が「実際に出走した頭数」寄りで、
-        // SE側には取消・除外馬も含まれる場合、最後の馬番が欠落する。
-        //
-        // そのため今回は、RAとSEをすべて読み込んでから、
-        // レース単位で entry / only_hinba を確定してCSV出力する。
         var raMap = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
         var seMap = new Dictionary<string, List<Dictionary<string, string>>>(StringComparer.Ordinal);
 
@@ -683,7 +993,6 @@ class Program
 
             if (grc == -1)
             {
-                // rc=-1 はエラーではなく、JVDファイルの切り替わり
                 fileSwitchCount++;
 
                 if (fileSwitchCount % 100 == 1)
@@ -696,7 +1005,6 @@ class Program
 
             if (grc == -3)
             {
-                // rc=-3 はファイルダウンロード中
                 downloadWaitCount++;
 
                 Console.WriteLine("JVGets(RACE) ダウンロード中 rc=-3。待機します。wait=" + downloadWaitCount);
@@ -851,7 +1159,16 @@ class Program
         Console.WriteLine("skipped RA place count=" + skippedRaPlaceCount);
         Console.WriteLine("skipped SE place count=" + skippedSePlaceCount);
 
-        WriteCsvAfterLoad(outCsv, raMap, seMap, jockeyBelongMap, trainerBelongMap);
+        WriteCsvAfterLoad(
+            outCsv,
+            raMap,
+            seMap,
+            jockeyBelongMap,
+            trainerBelongMap,
+            jockeyFreeMap,
+            jockeyBelongTrainerIdMap,
+            jockeyBelongTrainerNameMap
+        );
 
         Console.WriteLine("done: " + outCsv);
     }
@@ -865,7 +1182,10 @@ class Program
         Dictionary<string, Dictionary<string, string>> raMap,
         Dictionary<string, List<Dictionary<string, string>>> seMap,
         Dictionary<string, string> jockeyBelongMap,
-        Dictionary<string, string> trainerBelongMap
+        Dictionary<string, string> trainerBelongMap,
+        Dictionary<string, string> jockeyFreeMap,
+        Dictionary<string, string> jockeyBelongTrainerIdMap,
+        Dictionary<string, string> jockeyBelongTrainerNameMap
     )
     {
         var headers = new[]
@@ -905,6 +1225,9 @@ class Program
             "jockey",
             "jockey_id",
             "jockey_belong_area",
+            "jockey_free",
+            "jockey_belong_trainer_id",
+            "jockey_belong_trainer",
             "belong_area",
             "trainer",
             "trainer_id",
@@ -946,12 +1269,7 @@ class Program
                     continue;
                 }
 
-                // entry はそのレースのSE件数を使う。
-                // 取消・除外を含む「CSVに出す出馬表上の頭数」として扱う。
                 int entryCount = seList.Count;
-
-                // only_hinba はレース単位で確定する。
-                // RAに牝馬限定の記号・文字がある、または全SEのsexが2なら1。
                 string onlyHinba = ConvertOnlyHinbaByRace(raDict, seList);
 
                 var sortedSeList = seList
@@ -969,7 +1287,10 @@ class Program
                         entryCount,
                         onlyHinba,
                         jockeyBelongMap,
-                        trainerBelongMap
+                        trainerBelongMap,
+                        jockeyFreeMap,
+                        jockeyBelongTrainerIdMap,
+                        jockeyBelongTrainerNameMap
                     );
 
                     outputCount++;
@@ -1005,7 +1326,10 @@ class Program
         int entryCount,
         string onlyHinba,
         Dictionary<string, string> jockeyBelongMap,
-        Dictionary<string, string> trainerBelongMap
+        Dictionary<string, string> trainerBelongMap,
+        Dictionary<string, string> jockeyFreeMap,
+        Dictionary<string, string> jockeyBelongTrainerIdMap,
+        Dictionary<string, string> jockeyBelongTrainerNameMap
     )
     {
         string year = ToIntText(Pick(ra, "Year"));
@@ -1037,12 +1361,9 @@ class Program
         }
         string courseType = ConvertCourseType(rawCourseKubun);
 
-        // horseage_conditions は SyubetuCD だけを元に判定する。
-        // レース名文字列からの推測はしない。
         string syubetuCode = GetSyubetuCode(ra);
         string horseageConditions = ConvertHorseAgeConditionsFromSyubetuCode(syubetuCode);
 
-        // race_class は JyokenCD5 を元に判定する。
         string jyokenCode5 = GetJyokenCode5(ra);
 
         string gradeRaw = Pick(ra, "GradeCD", "Grade");
@@ -1084,10 +1405,6 @@ class Program
 
         string startRaceTime = FormatTimeHHMMSS(Pick(ra, "HassoTime", "HassoJikoku", "StartTime"));
 
-        // 修正:
-        // 以前は RA の SyussoTosu を entry にしていた。
-        // 今回は、読み込み済みの同一レースSE件数を entry にする。
-        // これにより、取消・除外馬を含む出馬表上の件数とCSV行数が一致する。
         string entry = entryCount > 0
             ? entryCount.ToString()
             : ToIntText(Pick(ra, "SyussoTosu", "ShussoTosu", "Tosu", "HeadCount"));
@@ -1162,6 +1479,28 @@ class Program
             jockeyBelongArea = GetJockeyBelongAreaFromSe(se);
         }
 
+        string jockeyFree = "";
+        string jockeyBelongTrainerId = "";
+        string jockeyBelongTrainer = "";
+
+        if (jockeyId.Length != 0)
+        {
+            if (jockeyFreeMap.TryGetValue(jockeyId, out var freeFromMaster))
+            {
+                jockeyFree = freeFromMaster;
+            }
+
+            if (jockeyBelongTrainerIdMap.TryGetValue(jockeyId, out var belongTrainerIdFromMaster))
+            {
+                jockeyBelongTrainerId = belongTrainerIdFromMaster;
+            }
+
+            if (jockeyBelongTrainerNameMap.TryGetValue(jockeyId, out var belongTrainerNameFromMaster))
+            {
+                jockeyBelongTrainer = belongTrainerNameFromMaster;
+            }
+        }
+
         string trainerId = Pick(se, "ChokyosiCode", "ChokyosiCD", "TrainerCode", "TrainerCD");
         if (trainerId.Length == 0)
         {
@@ -1187,8 +1526,6 @@ class Program
             trainerBelongArea = GetTrainerBelongAreaFromSe(se);
         }
 
-        // 既存互換用の belong_area。
-        // 従来はSE側のTozaiCDを使っていたため、ここでは trainer_belong_area と同じ値を基本にする。
         string belongArea = trainerBelongArea;
 
         if (belongArea.Length == 0)
@@ -1293,6 +1630,9 @@ class Program
             ToNullLiteral(jockey),
             ToNullLiteral(jockeyId),
             ToNullLiteral(jockeyBelongArea),
+            ToNullLiteral(jockeyFree),
+            ToNullLiteral(jockeyBelongTrainerId),
+            ToNullLiteral(jockeyBelongTrainer),
             ToNullLiteral(belongArea),
             ToNullLiteral(trainer),
             ToNullLiteral(trainerId),
@@ -1333,25 +1673,6 @@ class Program
     {
         syubetuCode = NormalizeCodeNumber(syubetuCode);
 
-        // horseage_conditions
-        // 2歳限定=0
-        // 3歳限定=1
-        // 3歳以上=2
-        // 4歳以上=3
-        // その他=4
-        //
-        // ここはレース名文字列ではなく、JRA-VANの競走種別コード SyubetuCD を元に判定する。
-        //
-        // 主に使用する想定:
-        // 11 = サラ系2歳
-        // 12 = サラ系3歳
-        // 13 = サラ系3歳以上
-        // 14 = サラ系4歳以上
-        // 18 = サラ系障害3歳以上
-        // 19 = サラ系障害4歳以上
-        //
-        // 古いアラブ系などが混ざった場合も一応 21〜24 を同じ考えで処理する。
-
         switch (syubetuCode)
         {
             case "11":
@@ -1381,7 +1702,6 @@ class Program
 
     static string GetJyokenCode5(Dictionary<string, string> ra)
     {
-        // まず分かりやすい名前を直接拾う
         string direct = Pick(
             ra,
             "JyokenCD5",
@@ -1397,10 +1717,6 @@ class Program
             return NormalizeCodeNumber(direct);
         }
 
-        // FlattenObject後のキー例:
-        // JyokenInfo.JyokenCD[4]
-        // JyokenInfo.JyokenCD[4].Code
-        // のような形も拾う
         var indexed = new Dictionary<int, string>();
 
         foreach (var kv in ra)
@@ -1446,13 +1762,11 @@ class Program
             }
         }
 
-        // JRA-VANのJyokenCD配列は0始まりで [4] が5番目の想定
         if (indexed.TryGetValue(4, out var v4))
         {
             return NormalizeCodeNumber(v4);
         }
 
-        // 名前が JyokenCD5 のような1始まりだった場合も上で拾うが、保険として index=5 も見る
         if (indexed.TryGetValue(5, out var v5))
         {
             return NormalizeCodeNumber(v5);
@@ -1464,15 +1778,6 @@ class Program
     static string ConvertRaceClassFromJyokenCode5(string jyokenCode5, string gradeRaw)
     {
         string code = NormalizeCodeNumber(jyokenCode5);
-
-        // race_class
-        // 新馬戦=0
-        // 未勝利=1
-        // 1勝クラス=2
-        // 2勝クラス=3
-        // 3勝クラス=4
-        // オープン=5
-        // 未出走=6
 
         switch (code)
         {
@@ -1501,7 +1806,6 @@ class Program
                 break;
         }
 
-        // JyokenCD5が取れなかった場合でも、GradeCDがあるレースは基本的にオープン以上として扱う
         if (Norm(gradeRaw).Length != 0)
         {
             return "5";
@@ -1516,14 +1820,11 @@ class Program
 
     static string ConvertOnlyHinbaByRace(Dictionary<string, string> ra, List<Dictionary<string, string>> seList)
     {
-        // 1. RA側のレース名・記号・条件系に「牝」が含まれる場合は牝馬限定
         if (RaLooksHinbaLimited(ra))
         {
             return "1";
         }
 
-        // 2. レース名だけでは拾えない牝馬限定重賞対策
-        //    例: 桜花賞、秋華賞、優駿牝馬、ヴィクトリアマイル等
         string raceNameRaw = Pick(ra, "Hondai");
         if (raceNameRaw.Length == 0)
         {
@@ -1535,9 +1836,6 @@ class Program
             return "1";
         }
 
-        // 3. SE側の全馬が sex=2 の場合は牝馬限定として扱う
-        //    取消・除外馬も含めて全て牝馬なら1。
-        //    sexが取れない行が混ざる場合は、この判定では1にしない。
         if (seList != null && seList.Count > 0)
         {
             bool allKnown = true;
@@ -1625,8 +1923,6 @@ class Program
             return true;
         }
 
-        // レース名に「牝」が入らない牝馬限定重賞・主要競走の保険。
-        // JRAの番組変更に備え、最終的にはRAの競走記号・条件系で拾えるのが理想。
         string[] knownFillyLimitedNames =
         {
             "桜花賞",
@@ -1716,15 +2012,15 @@ class Program
 
         if (raw.Length == 0) return "";
 
-        if (raw == "A") return "0"; // G1
-        if (raw == "B") return "1"; // G2
-        if (raw == "C") return "2"; // G3
-        if (raw == "D") return "3"; // 重賞
-        if (raw == "E") return "4"; // 特別競走
-        if (raw == "F") return "5"; // JG1
-        if (raw == "G") return "6"; // JG2
-        if (raw == "H") return "7"; // JG3
-        if (raw == "L") return "8"; // リステッド
+        if (raw == "A") return "0";
+        if (raw == "B") return "1";
+        if (raw == "C") return "2";
+        if (raw == "D") return "3";
+        if (raw == "E") return "4";
+        if (raw == "F") return "5";
+        if (raw == "G") return "6";
+        if (raw == "H") return "7";
+        if (raw == "L") return "8";
 
         if (IsSignedInteger(raw))
         {
@@ -1821,10 +2117,7 @@ class Program
         int n;
         if (!int.TryParse(track, out n)) return false;
 
-        // 通常の芝トラック
         if (n >= 10 && n <= 22) return true;
-
-        // 障害は芝扱い寄りにする
         if (n >= 51 && n <= 59) return true;
 
         return false;
@@ -1835,7 +2128,6 @@ class Program
         int n;
         if (!int.TryParse(track, out n)) return false;
 
-        // 通常のダートトラック
         if (n >= 23 && n <= 29) return true;
 
         return false;
@@ -1880,8 +2172,6 @@ class Program
 
         raw = raw.Replace("．", ".").Replace("：", ":");
 
-        // 例: 2:34:5 → 1545
-        // 例: 1:09.9 → 699
         if (raw.IndexOf(":", StringComparison.Ordinal) >= 0)
         {
             string[] parts = raw.Split(':');
@@ -1961,7 +2251,6 @@ class Program
 
         raw = raw.Replace("．", ".");
 
-        // 例: 34.5 → 345
         if (raw.IndexOf(".", StringComparison.Ordinal) >= 0)
         {
             string[] parts = raw.Split('.');
@@ -2044,6 +2333,37 @@ class Program
 
         Console.WriteLine("--- type hint for " + recId + " ---");
         foreach (var n in cand) Console.WriteLine(n);
+        Console.WriteLine("--------------------------------");
+    }
+
+    static void DumpImportantMasterKeys(string recId, Dictionary<string, string> d)
+    {
+        Console.WriteLine("--- " + recId + " important keys sample ---");
+
+        var keys = d
+            .Where(kv =>
+                !string.IsNullOrWhiteSpace(kv.Value) &&
+                (
+                    kv.Key.IndexOf("Kisyu", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Jockey", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Chokyosi", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Trainer", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Syozoku", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Shozoku", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Belong", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Tozai", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    kv.Key.IndexOf("Free", StringComparison.OrdinalIgnoreCase) >= 0
+                )
+            )
+            .OrderBy(kv => kv.Key, StringComparer.Ordinal)
+            .Take(80)
+            .ToList();
+
+        foreach (var kv in keys)
+        {
+            Console.WriteLine(kv.Key + " = [" + kv.Value + "]");
+        }
+
         Console.WriteLine("--------------------------------");
     }
 
@@ -2161,11 +2481,7 @@ class Program
 
     static DateTime GetLastWeekMonday(DateTime baseDate)
     {
-        // DayOfWeek は Sunday=0, Monday=1, ... Saturday=6。
-        // 月曜始まりの週として扱うため、月曜からの経過日数に変換する。
         int daysSinceMonday = ((int)baseDate.DayOfWeek + 6) % 7;
-
-        // 今週の月曜を求め、そこから7日前へ戻す。
         DateTime thisWeekMonday = baseDate.Date.AddDays(-daysSinceMonday);
         return thisWeekMonday.AddDays(-7);
     }
@@ -2466,7 +2782,6 @@ class Program
             int n;
             if (int.TryParse(sb.ToString(), out n))
             {
-                // JyokenCD5 のような1始まり表記なら、5番目を index=4 として扱う
                 index = n - 1;
                 return true;
             }
