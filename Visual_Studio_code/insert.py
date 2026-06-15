@@ -15,9 +15,6 @@ import subprocess
 
 #-------20260605-------
 #これからやること
-#いんさーと、クエリに失敗した場合カラムの順番をいれかえたことを疑う
-#①jockey_infoをtrainer_infoを手本に一連の処理を完成させる
-#insert_horseの処理を書き直す
 #②出力、修正したファイルを全て~csvファイルに移動するように処理を変更する
 #googledriveに自動アップロードするスクリプトを書く
 #③全てのファイルをサーバーに転送させる処理を追加する(ファイルサーバー側のスクリプトを呼ぶ形にする)
@@ -27,8 +24,6 @@ import subprocess
 #⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
 #⑧本番環境のVMを建てて環境構築をなるべく自動化(win-getとpowershellで）する
 #⑩推論csvのスクリプトを完成させる
-
-
 
 def main():
     now = date.today().strftime("%Y%m%d")
@@ -53,23 +48,24 @@ def main():
     #     target_dict,fixed_flag,sent_mail_array=check_data(target_file_path)
     #     print("辞書を配列に変換開始")
     #     from_dict_to_converted_array=convert_form_dict_to_list(target_dict)
-        
     #     #修正したcsvを書き出す処理
-    #     if fixed_flag!=1:
+    #     if fixed_flag!=0:
     #         print("csvに書き出す処理開始")  
-    #         make_csv(target_file_path,from_dict_to_converted_array)
+    #         from_dict_to_converted_array
+    #         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
     #         fixed_flag=0
         
-    #     #目視で確認のいる項目の確認要請メールを送る処理
+    #     #修正項目の確認要請メールを送る処理
     #     if len(sent_mail_array)!=0:
     #         sent_mail(sent_mail_array)
-
-    #     #mysqlのdump（バックアップを取得処理を追加する）
+        
+    #     #mysqlのdump（バックアップを取得処理を追加する)
     #     print("mysqlのdump開始")
     #     dump_mysql()
     #     print("race_resultのインサート開始")
     #     insert_race_result(from_dict_to_converted_array,conn,cursor)
     #     move_file(target_file_path,move_filename)
+    #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
         
     # while len(horse_array)!=0:
     #     #馬情報の処理
@@ -729,7 +725,6 @@ def check_data(target_file_path):
             race_id_array.append(race_id)
 
             #チェック用の辞書作成
-            
             check_data=[row["race_id"],row["rank"],row["umaban"],row["entry"]]
             if race_id not in check_data_dict:
                 check_data_dict[race_id] = []
@@ -748,7 +743,7 @@ def check_data(target_file_path):
             for duble in rank_cheak_array[2]:
                 duble_array.append(duble)
             
-            #rankがすべて0の場合、配列を削除する
+            #rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
             if all(int(row[1])==0 for row in rank_cheak_array):
                 del race_result_inssert_data[race_id]
                 fixed_flag=1
@@ -758,23 +753,23 @@ def check_data(target_file_path):
                 sent_mail_array.append(race_id)
                 del race_result_inssert_data[race_id]
                 fixed_flag=1
+                print("馬番の重複あり")
             check_array_count=check_array_count+1
             duble_array=[]
             print(str(check_array_count)+"/"+str(len(check_data_dict))+"の処理完了")
 
         return race_result_inssert_data,fixed_flag,sent_mail_array
 
-def make_csv(target_file_path,fixed_flag,make_csv_array):
-    csv_outpath=target_file_path
-    csv_outpath=csv_outpath.replace(".csv","")
-    csv_outpath=csv_outpath+"_fixed.csv"
-
+def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
     if fixed_flag==1:
         header=["race_id","year,month","day","weekday","kai","nitime","race_number","race_name","place","course_distance","track","course_type","horseage_conditions","race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition",
             "start_race_time","entry","wakuban","umaban","horse_name","horse_id","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey","jockey_id","jockey_belong_area","belong_area",
             "trainer","trainer_id","trainer_belong_area","abnormal_code","rank","race_time","corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
-
+        target_file=target_file.replace(".csv","")
+        fixed_filename=target_file+"_fixed.csv"
+        export_csv_path=output_csv+"\\"+fixed_filename
+    
     #horse_idの場合
     elif fixed_flag==2:
         pass
@@ -782,16 +777,20 @@ def make_csv(target_file_path,fixed_flag,make_csv_array):
     #trainer_infoの場合
     elif fixed_flag==3:
         header=["trainer_id","trainer_name","trainer_belong_area","belong_updata","active","firist_run","last_run"]
+        export_csv_path=output_csv+"\\"+target_file
     
     #jockey_infoの場合
     elif fixed_flag==4:
         header=["jockey_id","jockey_name","jockey_belong_area","free","jockey_belong_trainer_id","jockey_belong_trainer_name","belong_update","active","firist_run","last_run"]
+        export_csv_path=output_csv+"\\"+target_file
     
-    make_csv_array.insert(0,header)
-    with open(csv_outpath, mode="w", encoding="utf-8-sig", newline="") as f:
+    #csv書き出し処理
+    export_csv_array=from_dict_to_converted_array.copy()
+    export_csv_array.insert(0,header)
+    with open(export_csv_path, mode="w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
-        writer.writerows(make_csv_array)    
-    return
+        writer.writerows(export_csv_array)    
+    return export_csv_path
 
 def sent_mail(sent_mail_array):
     str_count=0
@@ -848,9 +847,9 @@ def sent_mail(sent_mail_array):
         print(e)
         return None
 
-def convert_form_dict_to_list(for_insert_and_make_csv_array):
+def convert_form_dict_to_list(target_dict):
     from_dict_to_converted_array=[]
-    for e in for_insert_and_make_csv_array.values():
+    for e in target_dict.values():
         from_dict_to_converted_array.extend(e)
     return from_dict_to_converted_array
     
