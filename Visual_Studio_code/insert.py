@@ -39,104 +39,102 @@ def main():
     odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
-    # while len(race_result_filenam_array)!=0:
-    #     #csvファイルは一つしかない想定なので[0]固定
-    #     target_file=race_result_filenam_array[0]
-    #     target_file_path=insert_race_result_csv_dir+"\\"+target_file
-    #     move_filename=output_csv+"\\"+target_file
-    #     print("データのチェックを開始")
-    #     target_dict,fixed_flag,sent_mail_array=check_data(target_file_path)
-    #     print("辞書を配列に変換開始")
-    #     from_dict_to_converted_array=convert_form_dict_to_list(target_dict)
-    #     #修正したcsvを書き出す処理
-    #     if fixed_flag!=0:
-    #         print("csvに書き出す処理開始")  
-    #         from_dict_to_converted_array
-    #         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #         fixed_flag=0
+    while len(race_result_filenam_array)!=0:
+        #csvファイルは一つしかない想定なので[0]固定
+        target_file=race_result_filenam_array[0]
+        target_file_path=insert_race_result_csv_dir+"\\"+target_file
+        move_filename=output_csv+"\\"+target_file
+        print("データのチェックを開始")
+        target_dict,fixed_flag,sent_mail_array=check_data(target_file_path)
+        print("辞書を配列に変換開始")
+        from_dict_to_converted_array=convert_form_dict_to_list(target_dict)
+        #修正したcsvを書き出す処理
+        if fixed_flag!=0:
+            print("csvに書き出す処理開始")  
+            from_dict_to_converted_array
+            make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+            fixed_flag=0
         
-    #     #修正項目の確認要請メールを送る処理
-    #     if len(sent_mail_array)!=0:
-    #         sent_mail(sent_mail_array)
+        #修正項目の確認要請メールを送る処理
+        if len(sent_mail_array)!=0:
+            sent_mail(sent_mail_array)
         
-    #     #mysqlのdump（バックアップを取得処理を追加する)
-    #     print("mysqlのdump開始")
-    #     dump_mysql()
-    #     print("race_resultのインサート開始")
-    #     insert_race_result(from_dict_to_converted_array,conn,cursor)
-    #     move_file(target_file_path,move_filename)
-    #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+        #mysqlのdump（バックアップを取得処理を追加する)
+        print("mysqlのdump開始")
+        dump_mysql()
+        print("race_resultのインサート開始")
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
+        move_file(target_file_path,move_filename)
+        race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
         
-    # while len(horse_array)!=0:
-    #     #馬情報の処理
-    #     target_file=horse_array[0]
-    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
-    #     print("馬情報のインサート開始")
-    #     insert_horse(target_file_path,conn,cursor,now)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     horse_array=horsde_get_filename(insert_horse_csv_dir)
+    while len(horse_array)!=0:
+        #馬情報の処理
+        target_file=horse_array[0]
+        target_file_path=insert_horse_csv_dir+"\\"+target_file
+        print("馬情報のインサート開始")
+        insert_horse(target_file_path,conn,cursor,now)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        horse_array=horsde_get_filename(insert_horse_csv_dir)
 
-    # while len(odds_array)!=0:
-    #     #オッズ情報の処理
-    #     target_file=odds_array[0]
-    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
-    #     print("オッズ情報のインサート開始")
-    # #     insert_odds(target_file_path,target_file,conn,cursor)
-    # #     move_filename=output_csv+"\\"+target_file
-    # #     move_file(target_file_path,move_filename)
-    # #     odds_array=odds_get_filename(insert_odds_csv_dir)
+    while len(odds_array)!=0:
+        #オッズ情報の処理
+        target_file=odds_array[0]
+        target_file_path=insert_odds_csv_dir+"\\"+target_file
+        print("オッズ情報のインサート開始")
+        insert_odds(target_file_path,target_file,conn,cursor)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        odds_array=odds_get_filename(insert_odds_csv_dir)
 
-    # #trainer_infoの処理
-    # insert_array,updata_array=make_trainer_data(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのインサート処理開始")
-    #     insert_trainer_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのアップデート処理開始")
-    #     updata_trainer_info(updata_array,conn,cursor)
+    #trainer_infoの処理
+    insert_array,updata_array=make_trainer_data(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのインサート処理開始")
+        insert_trainer_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのアップデート処理開始")
+        updata_trainer_info(updata_array,conn,cursor)
 
-    # #jockey_infoの処理
-    # insert_array,updata_array=make_jockey_info(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのインサート処理開始")
-    #     insert_jockey_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのアップデート処理開始")
-    #     updata_jockey_info(updata_array,conn,cursor)
+    #jockey_infoの処理
+    insert_array,updata_array=make_jockey_info(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのインサート処理開始")
+        insert_jockey_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのアップデート処理開始")
+        updata_jockey_info(updata_array,conn,cursor)
 
     #すべてのcsvをファイルサーバーに移動する
     #windowsからファイルサーバーにおくる方式に変更する
     export_csv_to_fileserver()
 
     #googledriveにアプロードするスクリプトの記述
-    
+    upload_cloud()
 
     #windowsのローカルファイルを削除する
     delete_sorce_file()
     print("すべての処理完了！！")
-    
-
 
 
 def connect_mysql():
@@ -697,9 +695,9 @@ def updata_jockey_info(updata_array,conn,cursor):
 def check_data(target_file_path):
     race_result_inssert_data={}
     race_id_array=[]
+    check_array=[]
     check_data_dict={}
     check_array_count=0
-    duble_array=[]
     sent_mail_array=[]
     fixed_flag=0
     
@@ -742,23 +740,21 @@ def check_data(target_file_path):
             race_id=race_id_array[check_array_count]
             rank_cheak_array=check_data_dict[race_id]
             
-            #重複チェックのために配列を作成する
-            for duble in rank_cheak_array[2]:
-                duble_array.append(duble)
-            
             #rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
             if all(int(row[1])==0 for row in rank_cheak_array):
                 del race_result_inssert_data[race_id]
+                sent_mail_array.append(race_id)
                 fixed_flag=1
             
-            #umabanの重複がある場合、手動でインサートするため配列からは削除する。頭数も修正
-            elif len(rank_cheak_array)!=int(duble_array[-1]):
-                sent_mail_array.append(race_id)
+            #umabanの重複を検査する
+            for d in rank_cheak_array:
+                check_array.append(d[2])
+            if len(check_array)!=len(set(check_array)):
                 del race_result_inssert_data[race_id]
-                fixed_flag=1
+                sent_mail_array.append(race_id)
                 print("馬番の重複あり")
+            check_array=[]
             check_array_count=check_array_count+1
-            duble_array=[]
             print(str(check_array_count)+"/"+str(len(check_data_dict))+"の処理完了")
 
         return race_result_inssert_data,fixed_flag,sent_mail_array
@@ -823,8 +819,8 @@ def sent_mail(sent_mail_array):
     to = "aweqsenotice@gmail.com"
     subject = "インサートcsv不備"
     send_text = (
-        "競馬AI用のDBにインサートする項目に不備があります。\n"
-        "目視で確認してCSVを修正後、手動でインサートしてください。\n"
+        "CSVにレース取りやめか馬番の重複があります。\n"
+        "記載されているレースIDはインサートされてないので目視で確認してCSVを修正後、手動でインサートしてください。\n"
         f"レースIDは \n {str} です。"
     )
 
@@ -862,6 +858,9 @@ def dump_mysql():
 def make_dir():
     #公開鍵認証必須
     subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/make_dir"])
+
+def upload_cloud():
+    subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/upload_cloud"])
 
 def export_csv_to_fileserver():
     code_path="C:\\Users\\dev-w\\Desktop\\workspace\\output\\script\\from_local_to_server.ps1"
