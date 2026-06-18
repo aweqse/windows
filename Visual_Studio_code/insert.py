@@ -15,10 +15,6 @@ import subprocess
 
 #-------20260605-------
 #これからやること
-#②出力、修正したファイルを全て~csvファイルに移動するように処理を変更する
-#googledriveに自動アップロードするスクリプトを書く
-#③全てのファイルをサーバーに転送させる処理を追加する(ファイルサーバー側のスクリプトを呼ぶ形にする)
-#④trainer_info,jockey_infoを一度insertする
 #集約テーブルを作成してupdateするクエリを作り呼び出す処理を書く
 #⑥差分(2026年分)をダウンロードしてinsert.pyの一連の処理が正しく行われることの確認
 #⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
@@ -707,15 +703,197 @@ def check_data(target_file_path):
         reader = csv.DictReader(f)
         for row in reader:
             #インサート用の辞書を作成t
-            #騎手の所属やフリーの状態のカラムを足す
-            data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],
-                row["race_name"],row["place"],row["course_distance"],row["track"],row["course_type"],row["horseage_conditions"],
-                row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
-                row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
-                row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
-                row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
-                row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
+            data_1=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"],row["track"]]
+            if row["track"]==10:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=2
+                turn_direction_details=None
+            elif row["track"]==11:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=None
+            elif row["track"]==12:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=1
+            elif row["track"]==13:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=2
+            elif row["track"]==14:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=3
+            elif row["track"]==15:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=4
+            elif row["track"]==16:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=5
+            elif row["track"]==17:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=None
+            elif row["track"]==18:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=1
+            elif row["track"]==19:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=2
+            elif row["track"]==20:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=3
+            elif row["track"]==21:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=4
+            elif row["track"]==22:
+                race_type=0
+                course_type=0
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=5
+            elif row["track"]==23:
+                race_type=0
+                course_type=1
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=None
+            elif row["track"]==24:
+                race_type=0
+                course_type=1
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=None
+            elif row["track"]==25:
+                race_type=0
+                course_type=1
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=0
+            elif row["track"]==26:
+                race_type=0
+                course_type=1
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=1
+            elif row["track"]==27:
+                race_type=0
+                course_type=2
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=None
+            elif row["track"]==28:
+                race_type=0
+                course_type=2
+                jump_course_type=None
+                turn_direction=0
+                turn_direction_details=None
+            elif row["track"]==29:
+                race_type=0
+                course_type=1
+                jump_course_type=None
+                turn_direction=2
+                turn_direction_details=None
+            elif row["track"]==51:
+                race_type=1
+                course_type=0
+                jump_course_type=0
+                turn_direction=None
+                turn_direction_details=None
+            elif row["track"]==52:
+                race_type=1
+                course_type=0
+                jump_course_type=1
+                turn_direction=None
+                turn_direction_details=None
+            elif row["track"]==53:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=1
+                turn_direction_details=None
+            elif row["track"]==54:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=None
+            elif row["track"]==55:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=1
+            elif row["track"]==56:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=3
+            elif row["track"]==57:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=2
+            elif row["track"]==58:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=6
+            elif row["track"]==59:
+                race_type=1
+                course_type=0
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=7
+            else:
+                race_type=None
+                course_type=None
+                jump_course_type=None
+                turn_direction=None
+                turn_direction_details=None
+                
+            data_2=[row["horseage_conditions"],
+            row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
+            row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
+            row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
+            row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
+            row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
             
+            data=data_1+[race_type,course_type,jump_course_type,turn_direction,turn_direction_details]+data_2
+
             #nullチェックをする
             data=convert_null(data)
             
