@@ -35,6 +35,10 @@ def main():
     odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
+    #mysqlのdump（バックアップを取得処理を追加する)
+    print("mysqlのdump開始")
+    dump_mysql()
+
     while len(race_result_filenam_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
         target_file=race_result_filenam_array[0]
@@ -44,23 +48,22 @@ def main():
         target_dict,fixed_flag,sent_mail_array=check_data(target_file_path)
         print("辞書を配列に変換開始")
         from_dict_to_converted_array=convert_form_dict_to_list(target_dict)
+
         #修正したcsvを書き出す処理
         if fixed_flag!=0:
             print("csvに書き出す処理開始")  
             from_dict_to_converted_array
             make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
             fixed_flag=0
-        
+
         #修正項目の確認要請メールを送る処理
         if len(sent_mail_array)!=0:
             sent_mail(sent_mail_array)
-        
-        #mysqlのdump（バックアップを取得処理を追加する)
-        print("mysqlのdump開始")
-        dump_mysql()
         print("race_resultのインサート開始")
         insert_race_result(from_dict_to_converted_array,conn,cursor)
         move_file(target_file_path,move_filename)
+
+        #この処理は必ず最後に置く
         race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
         
     while len(horse_array)!=0:
@@ -126,8 +129,10 @@ def main():
     export_csv_to_fileserver()
 
     #googledriveにアプロードするスクリプトの記述
+    print("クラウドにバックアップ開始")
     upload_cloud()
-
+    print("クラウドにバックアップ終了")
+    
     #windowsのローカルファイルを削除する
     delete_sorce_file()
     print("すべての処理完了！！")
@@ -179,7 +184,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
@@ -550,6 +555,7 @@ def make_trainer_data(cursor,now):
         active=trainer_info_dict[trainer_id]["active"]   
         belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
         last_run=race_result_dict[trainer_id]["last_run"]
+        belong_update=None
         updata_flag=0
 
         #active_checkのチェック 
@@ -704,175 +710,176 @@ def check_data(target_file_path):
         for row in reader:
             #インサート用の辞書を作成t
             data_1=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"],row["track"]]
-            if row["track"]==10:
+            track_code=int(row["track"])
+            if track_code==10:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=2
                 turn_direction_details=None
-            elif row["track"]==11:
+            elif track_code==11:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=None
-            elif row["track"]==12:
+            elif track_code==12:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=1
-            elif row["track"]==13:
+            elif track_code==13:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=2
-            elif row["track"]==14:
+            elif track_code==14:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=3
-            elif row["track"]==15:
+            elif track_code==15:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=4
-            elif row["track"]==16:
+            elif track_code==16:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=5
-            elif row["track"]==17:
+            elif track_code==17:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=None
-            elif row["track"]==18:
+            elif track_code==18:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=1
-            elif row["track"]==19:
+            elif track_code==19:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=2
-            elif row["track"]==20:
+            elif track_code==20:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=3
-            elif row["track"]==21:
+            elif track_code==21:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=4
-            elif row["track"]==22:
+            elif track_code==22:
                 race_type=0
                 course_type=0
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=5
-            elif row["track"]==23:
+            elif track_code==23:
                 race_type=0
                 course_type=1
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=None
-            elif row["track"]==24:
+            elif track_code==24:
                 race_type=0
                 course_type=1
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=None
-            elif row["track"]==25:
+            elif track_code==25:
                 race_type=0
                 course_type=1
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=0
-            elif row["track"]==26:
+            elif track_code==26:
                 race_type=0
                 course_type=1
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=1
-            elif row["track"]==27:
+            elif track_code==27:
                 race_type=0
                 course_type=2
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=None
-            elif row["track"]==28:
+            elif track_code==28:
                 race_type=0
                 course_type=2
                 jump_course_type=None
                 turn_direction=0
                 turn_direction_details=None
-            elif row["track"]==29:
+            elif track_code==29:
                 race_type=0
                 course_type=1
                 jump_course_type=None
                 turn_direction=2
                 turn_direction_details=None
-            elif row["track"]==51:
+            elif track_code==51:
                 race_type=1
                 course_type=0
                 jump_course_type=0
                 turn_direction=None
                 turn_direction_details=None
-            elif row["track"]==52:
+            elif track_code==52:
                 race_type=1
                 course_type=0
                 jump_course_type=1
                 turn_direction=None
                 turn_direction_details=None
-            elif row["track"]==53:
+            elif track_code==53:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=1
                 turn_direction_details=None
-            elif row["track"]==54:
+            elif track_code==54:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=None
                 turn_direction_details=None
-            elif row["track"]==55:
+            elif track_code==55:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=None
                 turn_direction_details=1
-            elif row["track"]==56:
+            elif track_code==56:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=None
                 turn_direction_details=3
-            elif row["track"]==57:
+            elif track_code==57:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=None
                 turn_direction_details=2
-            elif row["track"]==58:
+            elif track_code==58:
                 race_type=1
                 course_type=0
                 jump_course_type=None
                 turn_direction=None
                 turn_direction_details=6
-            elif row["track"]==59:
+            elif track_code==59:
                 race_type=1
                 course_type=0
                 jump_course_type=None
@@ -885,7 +892,7 @@ def check_data(target_file_path):
                 turn_direction=None
                 turn_direction_details=None
                 
-            data_2=[row["horseage_conditions"],
+            data_2=[row["course_type"],row["horseage_conditions"],
             row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
             row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
             row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
