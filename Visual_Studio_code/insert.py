@@ -184,7 +184,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
@@ -705,201 +705,53 @@ def check_data(target_file_path):
     
     #検査用の辞書とrace_idの配列を作成する
     print("検査用の辞書作成開始")
+    TRACK_MAP = {10: (0, 0, None, 2, None),
+                11: (0, 0, None, 1, None),
+                12: (0, 0, None, 1, 1),
+                13: (0, 0, None, 1, 2),
+                14: (0, 0, None, 1, 3),
+                15: (0, 0, None, 1, 4),
+                16: (0, 0, None, 1, 5),
+                17: (0, 0, None, 0, None),
+                18: (0, 0, None, 0, 1),
+                19: (0, 0, None, 0, 2),
+                20: (0, 0, None, 0, 3),
+                21: (0, 0, None, 0, 4),
+                22: (0, 0, None, 0, 5),
+                23: (0, 1, None, 1, None),
+                24: (0, 1, None, 0, None),
+                25: (0, 1, None, 1, 0),
+                26: (0, 1, None, 0, 1),
+                27: (0, 2, None, 1, None),
+                28: (0, 2, None, 0, None),
+                29: (0, 1, None, 2, None),
+
+                51: (1, 0, 0, None, None),
+                52: (1, 0, 1, None, None),
+                53: (1, 0, None, 1, None),
+                54: (1, 0, None, None, None),
+                55: (1, 0, None, None, 1),
+                56: (1, 0, None, None, 3),
+                57: (1, 0, None, None, 2),
+                58: (1, 0, None, None, 6),
+                59: (1, 0, None, None, 7),}
     with open(target_file_path, mode="r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
             #インサート用の辞書を作成t
             data_1=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"],row["track"]]
             track_code=int(row["track"])
-            if track_code==10:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=2
-                turn_direction_details=None
-            elif track_code==11:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=None
-            elif track_code==12:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=1
-            elif track_code==13:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=2
-            elif track_code==14:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=3
-            elif track_code==15:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=4
-            elif track_code==16:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=5
-            elif track_code==17:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=None
-            elif track_code==18:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=1
-            elif track_code==19:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=2
-            elif track_code==20:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=3
-            elif track_code==21:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=4
-            elif track_code==22:
-                race_type=0
-                course_type=0
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=5
-            elif track_code==23:
-                race_type=0
-                course_type=1
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=None
-            elif track_code==24:
-                race_type=0
-                course_type=1
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=None
-            elif track_code==25:
-                race_type=0
-                course_type=1
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=0
-            elif track_code==26:
-                race_type=0
-                course_type=1
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=1
-            elif track_code==27:
-                race_type=0
-                course_type=2
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=None
-            elif track_code==28:
-                race_type=0
-                course_type=2
-                jump_course_type=None
-                turn_direction=0
-                turn_direction_details=None
-            elif track_code==29:
-                race_type=0
-                course_type=1
-                jump_course_type=None
-                turn_direction=2
-                turn_direction_details=None
-            elif track_code==51:
-                race_type=1
-                course_type=0
-                jump_course_type=0
-                turn_direction=None
-                turn_direction_details=None
-            elif track_code==52:
-                race_type=1
-                course_type=0
-                jump_course_type=1
-                turn_direction=None
-                turn_direction_details=None
-            elif track_code==53:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=1
-                turn_direction_details=None
-            elif track_code==54:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=None
-            elif track_code==55:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=1
-            elif track_code==56:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=3
-            elif track_code==57:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=2
-            elif track_code==58:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=6
-            elif track_code==59:
-                race_type=1
-                course_type=0
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=7
-            else:
-                race_type=None
-                course_type=None
-                jump_course_type=None
-                turn_direction=None
-                turn_direction_details=None
-                
+            
+            (race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,) = TRACK_MAP.get(track_code, (None, None, None, None, None))
+
             data_2=[row["course_type"],row["horseage_conditions"],
             row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
             row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
             row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
-            row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["rank"],row["race_time"],row["corner_1_rank"],
+            row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["ninki"],row["rank"],row["race_time"],row["corner_1_rank"],
             row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
             
-            data=data_1+[race_type,course_type,jump_course_type,turn_direction,turn_direction_details]+data_2
+            data=data_1+[race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details]+data_2
 
             #nullチェックをする
             data=convert_null(data)
