@@ -184,7 +184,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
@@ -739,19 +739,31 @@ def check_data(target_file_path):
         reader = csv.DictReader(f)
         for row in reader:
             #インサート用の辞書を作成t
-            data_1=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"],row["track"]]
-            track_code=int(row["track"])
+            data_1=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"]]
+            if 1000<=int(row["course_distance"])<=1300:
+                distance_group=0
+            elif 1400<=int(row["course_distance"])<=1600:
+                distance_group=1
+            elif 1700<=int(row["course_distance"])<=2200:
+                distance_group=2
+            elif 2300<=int(row["course_distance"])<=2600:
+                distance_group=3
+            elif 2700<=int(row["course_distance"]):
+                distance_group=4
+            else:
+                distance_group=None
             
+            track_code=int(row["track"])
             (race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,) = TRACK_MAP.get(track_code, (None, None, None, None, None))
 
-            data_2=[row["course_type"],row["horseage_conditions"],
+            data_2=[row["track"],row["course_type"],row["horseage_conditions"],
             row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
             row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
             row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
             row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["ninki"],row["rank"],row["race_time"],row["corner_1_rank"],
             row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
             
-            data=data_1+[race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details]+data_2
+            data=data_1+[race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,distance_group]+data_2
 
             #nullチェックをする
             data=convert_null(data)
