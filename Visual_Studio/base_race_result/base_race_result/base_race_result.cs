@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices; 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -63,8 +63,8 @@ class Program
         // =========================
         // 範囲を直接指定したい場合は、下の2行のコメントアウトを外して日付を変更する。
         // 例: 2024年の1年分を取得する場合
-        startDateText = "20250101";
-        endDateText = "20251231";
+        startDateText = "20240101";
+        endDateText = "20241231";
 
         // exe引数で開始日・終了日を渡した場合は、引数を最優先する。
         // 例:
@@ -1234,6 +1234,7 @@ class Program
             "trainer_belong_area",
             "abnormal_code",
             "rank",
+            "ninki",
             "race_time",
             "corner_1_rank",
             "corner_2_rank",
@@ -1547,6 +1548,13 @@ class Program
         }
         rank = ToIntText(rank);
 
+        string ninki = Pick(se, "Ninki", "TansyoNinki", "WinOddsNinki", "OddsNinki");
+        if (ninki.Length == 0)
+        {
+            ninki = PickByKeyContains(se, "Ninki");
+        }
+        ninki = ToIntText(ninki);
+
         string raceTime = Pick(se, "RaceTime", "Time", "SohaTime");
         if (raceTime.Length == 0)
         {
@@ -1639,6 +1647,7 @@ class Program
             ToNullLiteral(trainerBelongArea),
             ToNullLiteral(abnormalCode),
             ToNullLiteral(rank),
+            ToNullLiteral(ninki),
             ToNullLiteral(raceTime),
             ToNullLiteral(corner1),
             ToNullLiteral(corner2),
