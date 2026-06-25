@@ -13,6 +13,7 @@ import shutil
 
 def main():
  ymd,md=get_now_day()
+ 
  #土日は推論用のリアルタイムデータの取得処理に、金曜日は過去レースの取得処理のプログラムを起動するようにする。
  check_array=get_data(md)
 
