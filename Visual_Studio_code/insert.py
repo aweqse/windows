@@ -55,80 +55,79 @@ def main():
         export_csv_path=target_file_path
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-        # #修正項目の確認要請メールを送る処理
-        # if len(sent_mail_array)!=0:
-        #     sent_mail(sent_mail_array)
-        # print("race_resultのインサート開始")
-        # insert_race_result(from_dict_to_converted_array,conn,cursor)
-            #データの集約
-        print("データの集計を開始します。")
-        horse_summary(export_csv_path,cursor)
+        
+        #修正項目の確認要請メールを送る処理
+        if len(sent_mail_array)!=0:
+            sent_mail(sent_mail_array)
+        print("race_resultのインサート開始")
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
+        
+        # #データの集約
+        # print("データの集計を開始します。")
+        # horse_summary(export_csv_path,cursor)
         
         #この処理は必ず最後に置く
         fixed_flag=0
         move_file(target_file_path,move_filename)
         race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
         
-    # while len(horse_array)!=0:
-    #     #馬情報の処理
-    #     target_file=horse_array[0]
-    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
-    #     print("馬情報のインサート開始")
-    #     insert_horse(target_file_path,conn,cursor,now)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     horse_array=horsde_get_filename(insert_horse_csv_dir)
+    while len(horse_array)!=0:
+        #馬情報の処理
+        target_file=horse_array[0]
+        target_file_path=insert_horse_csv_dir+"\\"+target_file
+        print("馬情報のインサート開始")
+        insert_horse(target_file_path,conn,cursor,now)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        horse_array=horsde_get_filename(insert_horse_csv_dir)
 
-    # while len(odds_array)!=0:
-    #     #オッズ情報の処理
-    #     target_file=odds_array[0]
-    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
-    #     print("オッズ情報のインサート開始")
-    #     insert_odds(target_file_path,target_file,conn,cursor)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     odds_array=odds_get_filename(insert_odds_csv_dir)
+    while len(odds_array)!=0:
+        #オッズ情報の処理
+        target_file=odds_array[0]
+        target_file_path=insert_odds_csv_dir+"\\"+target_file
+        print("オッズ情報のインサート開始")
+        insert_odds(target_file_path,target_file,conn,cursor)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        odds_array=odds_get_filename(insert_odds_csv_dir)
 
-    # #trainer_infoの処理
-    # insert_array,updata_array=make_trainer_data(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのインサート処理開始")
-    #     insert_trainer_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのアップデート処理開始")
-    #     updata_trainer_info(updata_array,conn,cursor)
+    #trainer_infoの処理
+    insert_array,updata_array=make_trainer_data(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのインサート処理開始")
+        insert_trainer_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのアップデート処理開始")
+        updata_trainer_info(updata_array,conn,cursor)
 
-    # #jockey_infoの処理
-    # insert_array,updata_array=make_jockey_info(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのインサート処理開始")
-    #     insert_jockey_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのアップデート処理開始")
-    #     updata_jockey_info(updata_array,conn,cursor)
-
-
-
+    #jockey_infoの処理
+    insert_array,updata_array=make_jockey_info(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのインサート処理開始")
+        insert_jockey_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのアップデート処理開始")
+        updata_jockey_info(updata_array,conn,cursor)
 
     #すべてのcsvをファイルサーバーに移動する
     #windowsからファイルサーバーにおくる方式に変更する
@@ -676,7 +675,7 @@ def make_jockey_info(cursor,now):
         
 def insert_trainer_info(insert_array,conn,cursor):
     #インサート処理
-    insert_sql="insert into trainer_info(trainer_id,trainer_name,trainer_belong_area,belong_update,active,firist_run,last_run) values(%s,%s,%s,%s,%s,%s,%s)"
+    insert_sql="insert into trainer_info(trainer_id,trainer_name,trainer_belong_area,belong_update,active,first_run,last_run) values(%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_sql, insert_array)
     conn.commit()
     print("インサート処理が完了しました")
@@ -703,11 +702,13 @@ def updata_jockey_info(updata_array,conn,cursor):
 def check_data(target_file_path):
     race_result_inssert_data={}
     race_id_array=[]
-    check_array=[]
+    uniq_key_array=[]
     check_data_dict={}
     check_array_count=0
+    duble_count=0
     sent_mail_array=[]
     fixed_flag=0
+    
     
     #検査用の辞書とrace_idの配列を作成する
     print("検査用の辞書作成開始")
@@ -771,64 +772,70 @@ def check_data(target_file_path):
             data=data_1+[race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,distance_group]+data_2
 
             #nullチェックをする
+            print("nullチェック開始")
             data=convert_null(data)
             
-            race_id=row["race_id"]
+            # race_idだけだと代替開催・取りやめで混ざるので年月日を足す
+            print("拡張レースIDの取得開始")
+            race_id = row["race_id"] + row["year"] + row["month"] + row["day"]
             if race_id not in race_result_inssert_data:
                 race_result_inssert_data[race_id] = []
             race_result_inssert_data[race_id].append(data)
             race_id_array.append(race_id)
 
-            #チェック用の辞書作成
-            check_data=[row["race_id"],row["rank"],row["umaban"],row["entry"]]
-            if race_id not in check_data_dict:
-                check_data_dict[race_id] = []
-            check_data_dict[race_id].append(check_data)
-            check_data=[]
+            print("馬番重複用配列の取得開始")
+            uniq_key=row["race_id"]+row["umaban"]
+            uniq_key_array.append(uniq_key)
 
+        # race_id_arrayの重複を削除する
+        race_id_array = list(set(race_id_array))
 
-        #race_id_arrayの重複を削除する
-        race_id_array=list(set(race_id_array))
+        #uniq_key_arrayの重複を削除する
+        uniq_key_array = list(set(uniq_key_array))
 
-        #rankの値を検査する
-        print("CSVの検査開始")
-        while len(race_id_array)>check_array_count:
-            race_id=race_id_array[check_array_count]
-            rank_cheak_array=check_data_dict[race_id]
-            
-            #rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
-            if all(int(row[1])==0 for row in rank_cheak_array):
+        # rankの値を検査する
+        while len(race_id_array) > check_array_count:
+            print("レース取りやめの検査開始")
+            race_id = race_id_array[check_array_count]
+            rank_cheak_array = race_result_inssert_data[race_id]
+            rank_cheak_array
+            # rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
+            if all(int(e[48]) == 0 for e in rank_cheak_array):
                 del race_result_inssert_data[race_id]
-                sent_mail_array.append(race_id)
-                fixed_flag=1
+                # 通知には元のrace_idだけ入れる
+                if rank_cheak_array[0][0] not in sent_mail_array:
+                    sent_mail_array.append(rank_cheak_array[0][0])
+                fixed_flag = 1
+                check_array_count = check_array_count + 1
                 print("レースの取り止めあり")
-            
-            #umabanの重複を検査する
-            for d in rank_cheak_array:
-                check_array.append(d[2])
-            if len(check_array)!=len(set(check_array)):
-                del race_result_inssert_data[race_id]
-                sent_mail_array.append(race_id)
-                print("馬番の重複あり")
-            
-            check_array=[]
-            check_array_count=check_array_count+1
-            print(str(check_array_count)+"/"+str(len(check_data_dict))+"の処理完了")
+                continue
 
-        return race_result_inssert_data,fixed_flag,sent_mail_array
+            print("馬番被りの検査開始")
+            for r in rank_cheak_array:
+                uniq_value=str(r[0])+str(r[30])
+                if uniq_value in uniq_key_array:
+                    uniq_key_array.remove(uniq_value)
+                else:
+                    sent_mail_array.append(r[0])
+            check_array_count = check_array_count + 1
+
+        return race_result_inssert_data, fixed_flag, sent_mail_array
 
 def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
-    if fixed_flag==1 or fixed_flag==0:
+    if fixed_flag==0 or fixed_flag==1:  
         header=["race_id","year","month","day","weekday","kai","nitime","race_number","race_name","place","course_distance","distance_group","track","race_type","course_type","jump_course_type","turn_direction","turn_direction_details","turn_course_type","horseage_conditions",
-                "race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition","start_race_time","entry","wakuban","umaban","horse_id",
-                "horse_name","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey_id","jockey_name","jockey_belong_area","jockey_free","jockey_belong_trainer_id",
-                "jockey_belong_trainer_name","trainer_id","trainer_name","trainer_belong_area","abnormal_code","rank","ninki","race_time",
-                "corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
-        target_file=target_file.replace(".csv","")
-        fixed_filename=target_file+"_fixed.csv"
-        export_csv_path=output_csv+"\\"+fixed_filename
-    
+            "race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition","start_race_time","entry","wakuban","umaban","horse_id",
+            "horse_name","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey_id","jockey_name","jockey_belong_area","jockey_free","jockey_belong_trainer_id",
+            "jockey_belong_trainer_name","trainer_id","trainer_name","trainer_belong_area","abnormal_code","rank","ninki","race_time",
+            "corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
+
+        if fixed_flag==1:
+            target_file=target_file.replace(".csv","")
+            fixed_filename=target_file+"_fixed.csv"
+            export_csv_path=output_csv+"\\"+fixed_filename
+        else:
+            export_csv_path=output_csv+"\\"+target_file
     #horse_idの場合
     elif fixed_flag==2:
         pass
@@ -939,7 +946,7 @@ def horse_summary(export_csv_path,cursor):
     with open(export_csv_path, mode="r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            data=[row["race_id"],row["umaban"],row["horse_id"],row["rank"]]
+            target_id=[row["horse_id"],row["trainer_id"],row["jockey_id"]]
 
 
 
