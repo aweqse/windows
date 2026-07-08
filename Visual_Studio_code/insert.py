@@ -24,7 +24,11 @@ from time import sleep
 #⑩推論csvのスクリプトを完成させる
 
 def main():
-    now = date.today().strftime("%Y%m%d")
+    today=date.today()
+    now = today.strftime("%Y%m%d")
+    today_year =today.year
+    today_month=today.month
+    today_day=today.day
     print("時刻の取得完了")
     conn,cursor=connect_mysql()
     make_dir()
@@ -65,7 +69,7 @@ def main():
         #データの集約
         print("データの集計を開始します。")
         horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id=make_summary_dict(export_csv_path,cursor)
-        horse_summary(horse_id_array,horse_race_result_dict)
+        horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day)
     #     #この処理は必ず最後に置く
     #     fixed_flag=0
     #     move_file(target_file_path,move_filename)
@@ -1002,22 +1006,120 @@ def make_summary_dict(export_csv_path,cursor):
     print("辞書の作成完了")
     return horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id
     
-def horse_summary(horse_id_array,horse_race_result_dict):
+def horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day):
     print("集約の値の算出開始")
     summary_count=0
-    horse_5run_race_count_array=[]
+    race_count_array=[]
+    horse_close_run_array=[]
+
     while len(horse_id_array)>summary_count:
         horse_id=horse_id_array[summary_count]
         target_array=horse_race_result_dict[horse_id]
+
         #処理しやすいように降順でソートする
         target_array.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         
-        #近5走の集計を出す
-        if len(target_array)>=5:
-            horse_5run_race_count_array.append([target_array[0],target_array[1],target_array[2],target_array[3],target_array[4]])
+        for r in target_array:
+            race_count_array.append(r)
+        
+        #テスト用パラメーター
+        #horse_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
+        
+        #rank0を取り除いて有効出走数を算出する
+        horse_close_run_array=[q for q in race_count_array if q["rank"]!=0]
+        if len(horse_close_run_array)<=5:
+            horse_close5_run_array=horse_close_run_array.copy()
+            horse_5run_race_count=len(horse_close5_run_array)
         else:
-            horse_5run_race_count_array=target_array.copy()
-        horse_5run_race_count=0
+            horse_close5_run_array=horse_close_run_array.copy()
+            horse_5run_race_count=5
+        
+        if len(horse_close_run_array)<=10:
+            horse_close10_run_array=horse_close_run_array.copy()
+            horse_10run_race_count=len(horse_close10_run_array)
+        else:
+            horse_close10_run_array=horse_close_run_array.copy()
+            horse_10run_race_count=10
+        
+        #6か月の有効出走数を集計する
+        #6か月前の日付を算出する
+        before_6month=today_month-6
+        if before_6month<=0:
+            before_6year=today_year-1
+            before_6month=12+before_6month
+        else:
+            before_6year=today_year
+
+        horse_close6month_run_array=[q for q in race_count_array if q["rank"]!=0]
+        under_day_1=before_6year*10000+before_6month*100+today_day
+        month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+        horse_6m_race_count=len(month6_array)
+
+        horse_close1year_run_array=[q for q in race_count_array if q["rank"]!=0]
+        before_12year=today_year-1
+        under_day_2=before_12year*10000+today_month*100+today_day
+        month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+        horse_12m_race_count=len(month12_array)
+
+        #一着回数を算出する
+        horse_close5_win1_array=[q for q in horse_close5_run_array if q["rank"]==1]
+        horse_5run_win_count=len(horse_close5_win1_array)
+
+        horse_close10_win1_array=[q for q in horse_close10_run_array if q["rank"]==1]
+        horse_10run_win_count=len(horse_close10_win1_array)
+
+        horse_close6month_win1_array=[q for q in month6_array if q["rank"]==1]
+        horse_6m_win_count=len(horse_close6month_win1_array)
+        
+        horse_close1year_win1_array=[q for q in month12_array if q["rank"]==1]
+        horse_12m_win_count=len(horse_close1year_win1_array)
+
+        #連対回数を算出する
+        horse_close5_rentai_array=[q for q in horse_close5_run_array if q["rank"]==1 or q["rank"]==2]
+        horse_5run_rentai_count=len(horse_close5_rentai_array)
+
+        horse_close10_rentai_array=[q for q in horse_close10_run_array if q["rank"]==1 or q["rank"]==2]
+        horse_10run_rentai_count=len(horse_close10_rentai_array)
+
+        horse_close6month_rentai_array=[q for q in month6_array if q["rank"]==1 or q["rank"]==2]
+        horse_6m_rentai_count=len(horse_close6month_rentai_array)
+        
+        horse_close1year_rentai_array=[q for q in month12_array if q["rank"]==1 or q["rank"]==2]
+        horse_12m_rentai_count=len(horse_close1year_rentai_array)
+
+        #複勝を算出する
+        horse_close5_fuku_array=[q for q in horse_close5_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
+        horse_5run_rentai_count=len(horse_close5_fuku_array)
+
+        horse_close10_fuku_array=[q for q in horse_close10_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
+        horse_10run_rentai_count=len(horse_close10_fuku_array)
+
+        horse_close6month_fuku_array=[q for q in month6_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
+        horse_6m_rentai_count=len(horse_close6month_fuku_array)
+        
+        horse_close1year_fuku_array=[q for q in month12_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
+        horse_12m_rentai_count=len(horse_close1year_fuku_array)
+
+        #勝率を算出する
+        horse_5run_win_rate=horse_5run_race_count/horse_5run_win_count
+        horse_10run_win_rate=horse_10run_race_count/horse_10run_win_count
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
         
 
 
