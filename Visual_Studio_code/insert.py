@@ -41,9 +41,9 @@ def main():
     odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
-    # #mysqlのdump（バックアップを取得処理を追加する)
-    # print("mysqlのdump開始")
-    # dump_mysql()
+    #mysqlのdump（バックアップを取得処理を追加する)
+    print("mysqlのdump開始")
+    dump_mysql()
 
     while len(race_result_filenam_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -51,7 +51,7 @@ def main():
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
         move_filename=output_csv+"\\"+target_file
         print("データのチェックを開始")
-        race_result_inssert_data,fixed_flag,sent_mail_array=check_data(target_file_path)
+        race_result_inssert_data,fixed_flag,sent_mail_stop_array,sent_mail_double_array=check_data(target_file_path)
         print("辞書を配列に変換開始")
         from_dict_to_converted_array=convert_form_dict_to_list(race_result_inssert_data)
 
@@ -60,16 +60,17 @@ def main():
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         
-    #     #修正項目の確認要請メールを送る処理
-    #     if len(sent_mail_array)!=0:
-    #         sent_mail(sent_mail_array)
-    #     print("race_resultのインサート開始")
-    #     insert_race_result(from_dict_to_converted_array,conn,cursor)
+        #修正項目の確認要請メールを送る処理
+        if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
+            sent_mail(sent_mail_stop_array,sent_mail_double_array)
+        print("race_resultのインサート開始")
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
         
-        #データの集約
-        print("データの集計を開始します。")
-        horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id=make_summary_dict(export_csv_path,cursor)
-        horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day)
+        # #データの集約
+        # print("データの集計を開始します。")
+        # horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id=make_summary_dict(export_csv_path,cursor)
+        # horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day)
+
     #     #この処理は必ず最後に置く
     #     fixed_flag=0
     #     move_file(target_file_path,move_filename)
@@ -193,7 +194,7 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
     cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
@@ -708,7 +709,8 @@ def check_data(target_file_path):
     race_id_array=[]
     uniq_key_array=[]
     check_array_count=0
-    sent_mail_array=[]
+    sent_mail_stop_array=[]
+    sent_mail_double_array=[]
     fixed_flag=0
     
     #検査用の辞書とrace_idの配列を作成する
@@ -766,9 +768,9 @@ def check_data(target_file_path):
             data_2=[row["course_type"],row["horseage_conditions"],
             row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
             row["start_race_time"],row["entry"],row["wakuban"],row["umaban"],row["horse_id"],row["horse_name"],row["sex"],row["horse_age"],
-            row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey_name"],row["jockey_belong_area"],
-            row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer_name"],row["trainer_id"],row["trainer_name"],row["trainer_belong_area"],row["abnormal_code"],row["ninki"],row["rank"],row["race_time"],row["corner_1_rank"],
-            row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["time_lag"]]
+            row["horse_weight"],row["horse_weight_increase"],row["carried_weight"],row["jockey_id"],row["jockey"],row["jockey_belong_area"],
+            row["jockey_free"],row["jockey_belong_trainer_id"],row["jockey_belong_trainer"],row["trainer_id"],row["trainer"],row["trainer_belong_area"],row["abnormal_code"],row["ninki"],row["rank"],row["race_time"],row["corner_1_rank"],
+            row["corner_2_rank"],row["corner_3_rank"],row["corner_4_rank"],row["last_3_furlong_time"],row["last_3_furlong_rank"],row["time_lag"]]
             
             data=data_1+[race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,distance_group]+data_2
 
@@ -799,13 +801,12 @@ def check_data(target_file_path):
             print("レース取りやめの検査開始")
             race_id = race_id_array[check_array_count]
             rank_cheak_array = race_result_inssert_data[race_id]
-            rank_cheak_array
             # rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
             if all(int(e[48]) == 0 for e in rank_cheak_array):
                 del race_result_inssert_data[race_id]
                 # 通知には元のrace_idだけ入れる
-                if rank_cheak_array[0][0] not in sent_mail_array:
-                    sent_mail_array.append(rank_cheak_array[0][0])
+                if rank_cheak_array[0][0] not in sent_mail_stop_array:
+                    sent_mail_stop_array.append(rank_cheak_array[0][0])
                 fixed_flag = 1
                 check_array_count = check_array_count + 1
                 print("レースの取り止めあり")
@@ -818,14 +819,15 @@ def check_data(target_file_path):
                     uniq_key_array.remove(uniq_value)
                 else:
                     race_result_inssert_data.pop(race_id, None)
-                    if r[0] not in sent_mail_array:
-                        sent_mail_array.append(r[0])
+                    if r[0] not in sent_mail_double_array:
+                        sent_mail_double_array.append(r[0])
                     fixed_flag = 1
                     print("馬番被りあり:", r[0])
+
                     break
             check_array_count = check_array_count + 1
 
-        return race_result_inssert_data, fixed_flag, sent_mail_array
+        return race_result_inssert_data, fixed_flag, sent_mail_stop_array,sent_mail_double_array
 
 def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
@@ -864,7 +866,7 @@ def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
         writer.writerows(export_csv_array)    
     return export_csv_path
 
-def sent_mail(sent_mail_array):
+def sent_mail(sent_mail_stop_array,sent_mail_double_array):
     str_count=0
     str=""
 
@@ -881,43 +883,79 @@ def sent_mail(sent_mail_array):
         creds = flow.run_local_server(port=8080)
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
+    if len(sent_mail_stop_array)!=0:
+        while len(sent_mail_stop_array)>str_count:
+            str_temp=sent_mail_stop_array[str_count]
+            str=str+str_temp+"\n"
+            str_count=str_count+1
 
-    while len(sent_mail_array)>str_count:
-        str_temp=sent_mail_array[str_count]
-        str=str+str_temp+"\n"
-        str_count=str_count+1
+        service = build('gmail', 'v1', credentials=creds)
+        sender = "aweqsenotice@gmail.com"
+        to = "aweqsenotice@gmail.com"
+        subject = "インサートcsv不備"
+        send_text = (
+            "CSVにレース取りやめがあります。\n"
+            "手動での対処は必要ないはずですが念のためmysqlで対象のレースIDを条件にrankを検索して0出ないことを確認してください。\n"
+            f"レースIDは \n {str} です。"
+        )
 
-    service = build('gmail', 'v1', credentials=creds)
-    sender = "aweqsenotice@gmail.com"
-    to = "aweqsenotice@gmail.com"
-    subject = "インサートcsv不備"
-    send_text = (
-        "CSVにレース取りやめか馬番の重複があります。\n"
-        "記載されているレースIDはインサートされてないので目視で確認してCSVを修正後、手動でインサートしてください。\n"
-        f"レースIDは \n {str} です。"
-    )
+        message = MIMEText(send_text, "plain", "utf-8")
+        message["to"] = to
+        message["from"] = sender
+        message["subject"] = subject
 
-    message = MIMEText(send_text, "plain", "utf-8")
-    message["to"] = to
-    message["from"] = sender
-    message["subject"] = subject
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        message_body = {"raw": raw_message}
 
-    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-    message_body = {"raw": raw_message}
+        try:
+            response = service.users().messages().send(
+                userId="me",
+                body=message_body
+            ).execute()
 
-    try:
-        response = service.users().messages().send(
-            userId="me",
-            body=message_body
-        ).execute()
+            print(f"メールの送信完了 race_id={str}")
+            return response
 
-        print(f"メールの送信完了 race_id={str}")
-        return response
+        except Exception as e:
+            print(f"メール送信失敗 race_id={str}")
+            print(e)
+    else:
+        while len(sent_mail_double_array)>str_count:
+            str_temp=sent_mail_double_array[str_count]
+            str=str+str_temp+"\n"
+            str_count=str_count+1
 
-    except Exception as e:
-        print(f"メール送信失敗 race_id={str}")
-        print(e)
-        return None
+        service = build('gmail', 'v1', credentials=creds)
+        sender = "aweqsenotice@gmail.com"
+        to = "aweqsenotice@gmail.com"
+        subject = "インサートcsv不備"
+        send_text = (
+            "CSVに馬番の重複があります。\n"
+            "記載されているレースIDは中途半端にmysqlに登録されている可能性があるのでレースIDで検索して必要ならば削除してください。その後、CSVを修正しインサート処理を実行してください\n"
+            f"レースIDは \n {str} です。"
+        )
+
+        message = MIMEText(send_text, "plain", "utf-8")
+        message["to"] = to
+        message["from"] = sender
+        message["subject"] = subject
+
+        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+        message_body = {"raw": raw_message}
+
+        try:
+            response = service.users().messages().send(
+                userId="me",
+                body=message_body
+            ).execute()
+
+            print(f"メールの送信完了 race_id={str}")
+            return response
+
+        except Exception as e:
+            print(f"メール送信失敗 race_id={str}")
+            print(e)
+
 
 def convert_form_dict_to_list(target_dict):
     from_dict_to_converted_array=[]
@@ -980,7 +1018,7 @@ def make_summary_dict(export_csv_path,cursor):
         query_count=query_count+1
     print("クエリの作成完了")
 
-    horse_ummary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,last_3_furlong_time,race_ninki from race_result where "+query_str 
+    horse_ummary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,last_3_furlong_time,race_ninki,time_lag from race_result where "+query_str 
     cursor.execute(horse_ummary_query)
     summary_result_array = cursor.fetchall()
 
@@ -991,7 +1029,7 @@ def make_summary_dict(export_csv_path,cursor):
         jockey_id=row["jockey_id"]
         
         data={"year":row["year"],"month":row["month"],"day":row["day"],"umaban":row["umaban"],"rank":row["race_rank"],
-            "race_time":row["race_time"],"last_3_furlong_time":row["last_3_furlong_time"],"race_ninki":row["race_ninki"]}
+            "race_time":row["race_time"],"last_3_furlong_time":row["last_3_furlong_time"],"race_ninki":row["race_ninki"],"time_lag":[row["time_lag"]]}
         
         if horse_id not in horse_race_result_dict:
             horse_race_result_dict[horse_id] = []
@@ -1089,20 +1127,110 @@ def horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,t
 
         #複勝を算出する
         horse_close5_fuku_array=[q for q in horse_close5_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_5run_rentai_count=len(horse_close5_fuku_array)
+        horse_5run_fuku_count=len(horse_close5_fuku_array)
 
         horse_close10_fuku_array=[q for q in horse_close10_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_10run_rentai_count=len(horse_close10_fuku_array)
+        horse_10run_fuku_count=len(horse_close10_fuku_array)
 
         horse_close6month_fuku_array=[q for q in month6_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_6m_rentai_count=len(horse_close6month_fuku_array)
+        horse_6m_fuku_count=len(horse_close6month_fuku_array)
         
         horse_close1year_fuku_array=[q for q in month12_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_12m_rentai_count=len(horse_close1year_fuku_array)
+        horse_12m_fuku_count=len(horse_close1year_fuku_array)
 
         #勝率を算出する
         horse_5run_win_rate=horse_5run_race_count/horse_5run_win_count
         horse_10run_win_rate=horse_10run_race_count/horse_10run_win_count
+        horse_6m_win_rate=horse_6m_race_count/horse_6m_win_count
+        horse_12m_win_rate=horse_12m_race_count/horse_12m_win_count
+
+        #連対率を算出する
+        horse_5run_top2_rate=horse_5run_race_count/horse_5run_rentai_count
+        horse_10run_top2_rate=horse_10run_race_count/horse_10run_rentai_count
+        horse_6m_top2_rate=horse_6m_race_count/horse_6m_rentai_count
+        horse_12m_top2_rate=horse_12m_race_count/horse_12m_rentai_count
+
+        #複勝率を算出する
+        horse_5run_top3_rate=horse_5run_race_count/horse_5run_fuku_count
+        horse_10run_top3_rate=horse_10run_race_count/horse_10run_fuku_count
+        horse_6m_top3_rate=horse_6m_race_count/horse_6m_fuku_count
+        horse_12m_top2_rate=horse_12m_race_count/horse_12m_fuku_count
+
+        #その他の項目を算出する
+        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
+        for e in horse_close5_run_array:
+            rank=int(e["rank"])
+            time_lag=int(e["time_lag"])
+            ninki=int(e["ninki"])
+            rank_sum=rank+rank_sum
+            time_lag_sum=time_lag_sum+time_lag
+            ninki_sum=ninki_sum+ninki
+            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+            if rank>ninki:
+                over_rank_count=over_rank_count+1
+        horse_5run_avg_rank=len(horse_close5_run_array)/rank_sum
+        horse_5run_avg_time_lag=len(horse_close5_run_array)/rank_sum
+        horse_5run_avg_ninki=len(horse_close5_run_array)/ninki_sum
+        horse_5run_avg_rank_minus_ninki=len(horse_close5_run_array)/rank_ninki_sum
+        horse_5run_better_than_ninki_rate=len(horse_close5_run_array)/over_rank_count
+        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
+
+        for e in horse_close10_run_array:
+            rank=e["rank"]
+            time_lag=int(e["time_lag"])
+            ninki=int(e["ninki"])
+            rank_sum=rank+rank_sum
+            time_lag_sum=time_lag_sum+time_lag
+            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+            if rank>ninki:
+                over_rank_count=over_rank_count+1
+        horse_10run_avg_rank=len(horse_close10_run_array)/rank_sum
+        horse_10run_avg_time_lag=len(horse_close10_run_array)/rank_sum
+        horse_10run_avg_ninki=len(horse_close10_run_array)/ninki_sum
+        horse_10run_avg_rank_minus_ninki=len(horse_close10_run_array)/rank_ninki_sum
+        horse_10run_better_than_ninki_rate=len(horse_close10_run_array)/over_rank_count
+        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
+
+        for e in month6_array:
+            rank=e["rank"]
+            time_lag=int(e["time_lag"])
+            ninki=int(e["ninki"])
+            rank_sum=rank+rank_sum
+            time_lag_sum=time_lag_sum+time_lag
+            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+            if rank>ninki:
+                over_rank_count=over_rank_count+1
+        horse_month6_avg_rank=len(month6_array)/rank_sum
+        horse_6m_avg_time_lag=len(month6_array)/rank_sum
+        horse_6m_avg_ninki=len(month6_array)/ninki_sum
+        horse_6m_avg_rank_minus_ninki=len(month6_array)/rank_ninki_sum
+        horse_6m_better_than_ninki_rate=len(month6_array)/over_rank_count
+        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
+
+        for e in month12_array:
+            rank=e["rank"]
+            time_lag=int(e["time_lag"])
+            ninki=int(e["ninki"])
+            rank_sum=rank+rank_sum
+            time_lag_sum=time_lag_sum+time_lag
+            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+            if rank>ninki:
+                over_rank_count=over_rank_count+1
+        horse_month12_avg_rank=len(month12_array)/rank_sum
+        horse_12m_avg_time_lag=len(month12_array)/rank_sum
+        horse_12m_avg_ninki=len(month12_array)/ninki_sum
+        horse_12m_avg_rank_minus_ninki=len(month12_array)/rank_ninki_sum
+        horse_12m_better_than_ninki_rate=len(month12_array)/over_rank_count
+        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
+
+        
+
+        
+
+
+
+
+
 
 
 
