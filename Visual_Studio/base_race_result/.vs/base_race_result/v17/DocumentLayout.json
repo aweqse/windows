@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|c:\\users\\dev-w\\desktop\\workspace\\ai\\visual_studio\\base_race_result\\base_race_result\\base_race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|solutionrelative:base_race_result\\base_race_result.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|c:\\users\\dev-w\\desktop\\workspace\\ai\\visual_studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|solutionrelative:base_race_result\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,14 +19,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "base_race_result.cs",
-              "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result.cs",
-              "RelativeDocumentMoniker": "base_race_result\\base_race_result.cs",
-              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result.cs",
-              "RelativeToolTip": "base_race_result\\base_race_result.cs",
-              "ViewState": "AgIAADYAAAAAAAAAAAAAwEIAAAAbAAAAAAAAAA==",
+              "Title": "base_race_result_optimized.cs",
+              "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs",
+              "RelativeDocumentMoniker": "base_race_result\\base_race_result_optimized.cs",
+              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs",
+              "RelativeToolTip": "base_race_result\\base_race_result_optimized.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAAAwEYAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-14T01:59:41.038Z",
+              "WhenOpened": "2026-07-12T12:36:00.999Z",
               "EditorCaption": ""
             }
           ]
