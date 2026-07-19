@@ -41,9 +41,9 @@ def main():
     odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
-    #mysqlのdump（バックアップを取得処理を追加する)
-    print("mysqlのdump開始")
-    dump_mysql()
+    # #mysqlのdump（バックアップを取得処理を追加する)
+    # print("mysqlのdump開始")
+    # dump_mysql()
 
     while len(race_result_filenam_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -60,16 +60,22 @@ def main():
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         
-        #修正項目の確認要請メールを送る処理
-        if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
-            sent_mail(sent_mail_stop_array,sent_mail_double_array)
-        print("race_resultのインサート開始")
-        insert_race_result(from_dict_to_converted_array,conn,cursor)
+    #     #修正項目の確認要請メールを送る処理
+    #     if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
+    #         sent_mail(sent_mail_stop_array,sent_mail_double_array)
+    #     print("race_resultのインサート開始")
+    #     insert_race_result(from_dict_to_converted_array,conn,cursor)
         
-        # #データの集約
-        # print("データの集計を開始します。")
-        # horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id=make_summary_dict(export_csv_path,cursor)
-        # horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day)
+        #データの集約
+        print("データの集計を開始します。")
+        horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id=make_summary_dict(export_csv_path,cursor)
+        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,today_day)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=trainer_summary(trainer_race_result_dict,trainer_id_array,today_day)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=jockey_summary(trainer_race_result_dict,trainer_id_array,today_day)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        print("データの集約とインサート完了")
 
     #     #この処理は必ず最後に置く
     #     fixed_flag=0
@@ -1018,7 +1024,7 @@ def make_summary_dict(export_csv_path,cursor):
         query_count=query_count+1
     print("クエリの作成完了")
 
-    horse_ummary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,last_3_furlong_time,race_ninki,time_lag from race_result where "+query_str 
+    horse_ummary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+query_str 
     cursor.execute(horse_ummary_query)
     summary_result_array = cursor.fetchall()
 
@@ -1028,8 +1034,8 @@ def make_summary_dict(export_csv_path,cursor):
         trainer_id=row["trainer_id"]
         jockey_id=row["jockey_id"]
         
-        data={"year":row["year"],"month":row["month"],"day":row["day"],"umaban":row["umaban"],"rank":row["race_rank"],
-            "race_time":row["race_time"],"last_3_furlong_time":row["last_3_furlong_time"],"race_ninki":row["race_ninki"],"time_lag":[row["time_lag"]]}
+        data={"year":row["year"],"month":row["month"],"day":row["day"],"race_id":row["race_id"],"umaban":row["umaban"],"rank":row["race_rank"],
+            "race_time":row["race_time"],"race_ninki":row["race_ninki"],"last_3_furlong_time":row["last_3_furlong_time"],"last_3_furlong_rank":row["last_3_furlong_rank"],"time_lag":row["time_lag"]}
         
         if horse_id not in horse_race_result_dict:
             horse_race_result_dict[horse_id] = []
@@ -1044,189 +1050,1093 @@ def make_summary_dict(export_csv_path,cursor):
     print("辞書の作成完了")
     return horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_array,trainer_id_array,jockey_id
     
-def horse_summary(horse_race_result_dict,horse_id_array,today_year,today_month,today_day):
+def horse_summary(horse_race_result_dict,horse_id_array,today_day):
     print("集約の値の算出開始")
     summary_count=0
-    race_count_array=[]
     horse_close_run_array=[]
+    horse_summary_array=[]
+    check_array=set()
+    summary_key=() 
 
     while len(horse_id_array)>summary_count:
+        
         horse_id=horse_id_array[summary_count]
-        target_array=horse_race_result_dict[horse_id]
-
+        target_array_origin=horse_race_result_dict[horse_id]
         #処理しやすいように降順でソートする
-        target_array.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
+        target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         
-        for r in target_array:
-            race_count_array.append(r)
-        
-        #テスト用パラメーター
-        #horse_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
-        
-        #rank0を取り除いて有効出走数を算出する
-        horse_close_run_array=[q for q in race_count_array if q["rank"]!=0]
-        if len(horse_close_run_array)<=5:
-            horse_close5_run_array=horse_close_run_array.copy()
+        #配列の中身と要素を取得する。
+        for target_index, r in enumerate(target_array_origin):
+            race_id=r["race_id"]
+            umaban=r["umaban"]
+            summary_day=today_day
+
+            #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
+            target_array = target_array_origin[target_index + 1:]
+            
+            #テスト用パラメーター
+            #horse_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
+            
+            #rank0を取り除いて有効出走数を算出する
+            horse_close_run_array=[q for q in target_array if int(q["rank"])!=0]
+            horse_close5_run_array=horse_close_run_array[:5].copy()
             horse_5run_race_count=len(horse_close5_run_array)
-        else:
-            horse_close5_run_array=horse_close_run_array.copy()
-            horse_5run_race_count=5
-        
-        if len(horse_close_run_array)<=10:
-            horse_close10_run_array=horse_close_run_array.copy()
+            horse_close10_run_array=horse_close_run_array[:10].copy()
             horse_10run_race_count=len(horse_close10_run_array)
-        else:
-            horse_close10_run_array=horse_close_run_array.copy()
-            horse_10run_race_count=10
+    
+            #6か月の有効出走数を集計する
+            #6か月前の日付を算出する
+            year=int(r["year"])
+            month=int(r["month"])
+            day=int(r["day"])
+            before_6month=month-6
+            if before_6month<=0:
+                before_6year=year-1
+                before_6month=12+before_6month
+            else:
+                before_6year=year
+
+            horse_close6month_run_array=horse_close_run_array.copy()
+            under_day_1=before_6year*10000+before_6month*100+day
+
+            month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            horse_6m_race_count=len(month6_array)
+
+            horse_close1year_run_array=horse_close6month_run_array.copy()
+            before_12year=year-1
+
+            under_day_2=before_12year*10000+month*100+day
+            month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            horse_12m_race_count=len(month12_array)
+
+            #一着回数を算出する
+            horse_close5_win1_array=[q for q in horse_close5_run_array if int(q["rank"])==1]
+            horse_5run_win_count=len(horse_close5_win1_array)
+
+            horse_close10_win1_array=[q for q in horse_close10_run_array if int(q["rank"])==1]
+            horse_10run_win_count=len(horse_close10_win1_array)
+
+            horse_close6month_win1_array=[q for q in month6_array if int(q["rank"])==1]
+            horse_6m_win_count=len(horse_close6month_win1_array)
+            
+            horse_close1year_win1_array=[q for q in month12_array if int(q["rank"])==1]
+            horse_12m_win_count=len(horse_close1year_win1_array)
+
+            #連対回数を算出する
+            horse_close5_rentai_array=[q for q in horse_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            horse_5run_top2_count=len(horse_close5_rentai_array)
+
+            horse_close10_rentai_array=[q for q in horse_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            horse_10run_top2_count=len(horse_close10_rentai_array)
+
+            horse_close6month_rentai_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2]
+            horse_6m_top2_count=len(horse_close6month_rentai_array)
+            
+            horse_close1year_rentai_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2]
+            horse_12m_top2_count=len(horse_close1year_rentai_array)
+
+            #複勝を算出する
+            horse_close5_fuku_array=[q for q in horse_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            horse_5run_top3_count=len(horse_close5_fuku_array)
+
+            horse_close10_fuku_array=[q for q in horse_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            horse_10run_top3_count=len(horse_close10_fuku_array)
+
+            horse_close6month_fuku_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            horse_6m_top3_count=len(horse_close6month_fuku_array)
+            
+            horse_close1year_fuku_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            horse_12m_top3_count=len(horse_close1year_fuku_array)
+
+            #勝率を算出する
+            target_count=horse_5run_win_count
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_win_rate=cal_result
+
+            target_count=horse_10run_win_count
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_win_rate=cal_result
+
+            target_count=horse_6m_win_count
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_win_rate=cal_result
+            
+            target_count=horse_12m_win_count
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_win_rate=cal_result
+
+            #連対率を算出する
+            target_count=horse_5run_top2_count
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_top2_rate=cal_result
+
+            target_count=horse_10run_top2_count
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_top2_rate=cal_result
+
+            target_count=horse_6m_top2_count
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_top2_rate=cal_result
+
+            target_count=horse_12m_top2_count
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_top2_rate=cal_result
+
+            #複勝率を算出する
+            target_count=horse_5run_top3_count
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_top3_rate=cal_result
+
+            target_count=horse_10run_top3_count
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_top3_rate=cal_result
+
+            target_count=horse_6m_top3_count
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_top3_rate=cal_result
+
+            target_count=horse_12m_top3_count
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_top3_rate=cal_result
+
+            #その他の項目を算出する
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+
+            for e in horse_close5_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_avg_last_3f_rank=cal_result
+
+            target_count=ninki_sum
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=horse_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_5run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+
+            for e in horse_close10_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_avg_last_3f_rank=cal_result
+
+            target_count=ninki_sum
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=horse_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_10run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+
+            for e in month6_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_avg_last_3f_rank=cal_result
+
+            target_count=ninki_sum
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=horse_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_6m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+
+            for e in month12_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_avg_last_3f_rank=cal_result
+
+            target_count=ninki_sum
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=horse_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            horse_12m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+
+            data=[race_id,umaban,summary_day, horse_id,
+                horse_5run_race_count,horse_10run_race_count,horse_6m_race_count,horse_12m_race_count,
+                horse_5run_win_count,horse_10run_win_count,horse_6m_win_count,horse_12m_win_count,
+                horse_5run_top2_count,horse_10run_top2_count,horse_6m_top2_count,horse_12m_top2_count,
+                horse_5run_top3_count,horse_10run_top3_count,horse_6m_top3_count,horse_12m_top3_count,
+                horse_5run_win_rate,horse_10run_win_rate,horse_6m_win_rate,horse_12m_win_rate,
+                horse_5run_top2_rate,horse_10run_top2_rate,horse_6m_top2_rate,horse_12m_top2_rate,
+                horse_5run_top3_rate,horse_10run_top3_rate,horse_6m_top3_rate,horse_12m_top3_rate,
+                horse_5run_avg_rank,horse_10run_avg_rank,horse_6m_avg_rank,horse_12m_avg_rank,
+                horse_5run_avg_time_lag,horse_10run_avg_time_lag,horse_6m_avg_time_lag,horse_12m_avg_time_lag,
+                horse_5run_avg_last_3f_rank,horse_10run_avg_last_3f_rank,horse_6m_avg_last_3f_rank,horse_12m_avg_last_3f_rank,
+                horse_5run_avg_ninki,horse_10run_avg_ninki,horse_6m_avg_ninki,horse_12m_avg_ninki,           
+                horse_5run_avg_rank_minus_ninki,horse_10run_avg_rank_minus_ninki,horse_6m_avg_rank_minus_ninki,horse_12m_avg_rank_minus_ninki,
+                horse_5run_better_than_ninki_rate,horse_10run_better_than_ninki_rate,horse_6m_better_than_ninki_rate,horse_12m_better_than_ninki_rate]
+            
+            summary_key=(race_id,umaban)
+            if summary_key in check_array:
+                print("重複を除外")
+                continue
+            else:
+                horse_summary_array.append(data)
+                check_array.add(summary_key)
+
+        summary_count=summary_count+1
+    insert_flag=1
+    print("馬の集計完了")
+    return horse_summary_array,insert_flag
         
-        #6か月の有効出走数を集計する
-        #6か月前の日付を算出する
-        before_6month=today_month-6
-        if before_6month<=0:
-            before_6year=today_year-1
-            before_6month=12+before_6month
-        else:
-            before_6year=today_year
+def trainer_summary(trainer_race_result_dict,trainer_id_array,today_day):
+    print("集約の値の算出開始")
+    summary_count=0
+    trainer_close_run_array=[]
+    trainer_summary_array=[]
+    check_array=set()
+    summary_key=() 
 
-        horse_close6month_run_array=[q for q in race_count_array if q["rank"]!=0]
-        under_day_1=before_6year*10000+before_6month*100+today_day
-        month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
-        horse_6m_race_count=len(month6_array)
-
-        horse_close1year_run_array=[q for q in race_count_array if q["rank"]!=0]
-        before_12year=today_year-1
-        under_day_2=before_12year*10000+today_month*100+today_day
-        month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
-        horse_12m_race_count=len(month12_array)
-
-        #一着回数を算出する
-        horse_close5_win1_array=[q for q in horse_close5_run_array if q["rank"]==1]
-        horse_5run_win_count=len(horse_close5_win1_array)
-
-        horse_close10_win1_array=[q for q in horse_close10_run_array if q["rank"]==1]
-        horse_10run_win_count=len(horse_close10_win1_array)
-
-        horse_close6month_win1_array=[q for q in month6_array if q["rank"]==1]
-        horse_6m_win_count=len(horse_close6month_win1_array)
+    while len(trainer_id_array)>summary_count:
         
-        horse_close1year_win1_array=[q for q in month12_array if q["rank"]==1]
-        horse_12m_win_count=len(horse_close1year_win1_array)
-
-        #連対回数を算出する
-        horse_close5_rentai_array=[q for q in horse_close5_run_array if q["rank"]==1 or q["rank"]==2]
-        horse_5run_rentai_count=len(horse_close5_rentai_array)
-
-        horse_close10_rentai_array=[q for q in horse_close10_run_array if q["rank"]==1 or q["rank"]==2]
-        horse_10run_rentai_count=len(horse_close10_rentai_array)
-
-        horse_close6month_rentai_array=[q for q in month6_array if q["rank"]==1 or q["rank"]==2]
-        horse_6m_rentai_count=len(horse_close6month_rentai_array)
+        trainer_id=trainer_id_array[summary_count]
+        target_array_origin=trainer_race_result_dict[trainer_id]
+        #処理しやすいように降順でソートする
+        target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         
-        horse_close1year_rentai_array=[q for q in month12_array if q["rank"]==1 or q["rank"]==2]
-        horse_12m_rentai_count=len(horse_close1year_rentai_array)
+        #配列の中身と要素を取得する。
+        for target_index, r in enumerate(target_array_origin):
+            race_id=r["race_id"]
+            umaban=r["umaban"]
+            summary_day=today_day
 
-        #複勝を算出する
-        horse_close5_fuku_array=[q for q in horse_close5_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_5run_fuku_count=len(horse_close5_fuku_array)
+            #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
+            target_array = target_array_origin[target_index + 1:]
+            
+            #テスト用パラメーター
+            #trainer_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
+            
+            #rank0を取り除いて有効出走数を算出する
+            trainer_close_run_array=[q for q in target_array if int(q["rank"])!=0]
+            trainer_close5_run_array=trainer_close_run_array[:5].copy()
+            trainer_5run_race_count=len(trainer_close5_run_array)
+            trainer_close10_run_array=trainer_close_run_array[:10].copy()
+            trainer_10run_race_count=len(trainer_close10_run_array)
+    
+            #6か月の有効出走数を集計する
+            #6か月前の日付を算出する
+            year=int(r["year"])
+            month=int(r["month"])
+            day=int(r["day"])
+            before_6month=month-6
+            if before_6month<=0:
+                before_6year=year-1
+                before_6month=12+before_6month
+            else:
+                before_6year=year
 
-        horse_close10_fuku_array=[q for q in horse_close10_run_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_10run_fuku_count=len(horse_close10_fuku_array)
+            trainer_close6month_run_array=trainer_close_run_array.copy()
+            under_day_1=before_6year*10000+before_6month*100+day
 
-        horse_close6month_fuku_array=[q for q in month6_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_6m_fuku_count=len(horse_close6month_fuku_array)
+            month6_array=[s for s in trainer_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            trainer_6m_race_count=len(month6_array)
+
+            trainer_close1year_run_array=trainer_close6month_run_array.copy()
+            before_12year=year-1
+
+            under_day_2=before_12year*10000+month*100+day
+            month12_array=[s for s in trainer_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            trainer_12m_race_count=len(month12_array)
+
+            #一着回数を算出する
+            trainer_close5_win1_array=[q for q in trainer_close5_run_array if int(q["rank"])==1]
+            trainer_5run_win_count=len(trainer_close5_win1_array)
+
+            trainer_close10_win1_array=[q for q in trainer_close10_run_array if int(q["rank"])==1]
+            trainer_10run_win_count=len(trainer_close10_win1_array)
+
+            trainer_close6month_win1_array=[q for q in month6_array if int(q["rank"])==1]
+            trainer_6m_win_count=len(trainer_close6month_win1_array)
+            
+            trainer_close1year_win1_array=[q for q in month12_array if int(q["rank"])==1]
+            trainer_12m_win_count=len(trainer_close1year_win1_array)
+
+            #連対回数を算出する
+            trainer_close5_rentai_array=[q for q in trainer_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            trainer_5run_top2_count=len(trainer_close5_rentai_array)
+
+            trainer_close10_rentai_array=[q for q in trainer_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            trainer_10run_top2_count=len(trainer_close10_rentai_array)
+
+            trainer_close6month_rentai_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2]
+            trainer_6m_top2_count=len(trainer_close6month_rentai_array)
+            
+            trainer_close1year_rentai_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2]
+            trainer_12m_top2_count=len(trainer_close1year_rentai_array)
+
+            #複勝を算出する
+            trainer_close5_fuku_array=[q for q in trainer_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            trainer_5run_top3_count=len(trainer_close5_fuku_array)
+
+            trainer_close10_fuku_array=[q for q in trainer_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            trainer_10run_top3_count=len(trainer_close10_fuku_array)
+
+            trainer_close6month_fuku_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            trainer_6m_top3_count=len(trainer_close6month_fuku_array)
+            
+            trainer_close1year_fuku_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            trainer_12m_top3_count=len(trainer_close1year_fuku_array)
+
+            #勝率を算出する
+            target_count=trainer_5run_win_count
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_win_rate=cal_result
+
+            target_count=trainer_10run_win_count
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_win_rate=cal_result
+
+            target_count=trainer_6m_win_count
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_win_rate=cal_result
+            
+            target_count=trainer_12m_win_count
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_win_rate=cal_result
+
+            #連対率を算出する
+            target_count=trainer_5run_top2_count
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_top2_rate=cal_result
+
+            target_count=trainer_10run_top2_count
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_top2_rate=cal_result
+
+            target_count=trainer_6m_top2_count
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_top2_rate=cal_result
+
+            target_count=trainer_12m_top2_count
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_top2_rate=cal_result
+
+            #複勝率を算出する
+            target_count=trainer_5run_top3_count
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_top3_rate=cal_result
+
+            target_count=trainer_10run_top3_count
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_top3_rate=cal_result
+
+            target_count=trainer_6m_top3_count
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_top3_rate=cal_result
+
+            target_count=trainer_12m_top3_count
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_top3_rate=cal_result
+
+            #その他の項目を算出する
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in trainer_close5_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=trainer_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_5run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in trainer_close10_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=trainer_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_10run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in month6_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in month12_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            data=[race_id,umaban,summary_day, trainer_id,
+                trainer_5run_race_count,trainer_10run_race_count,trainer_6m_race_count,trainer_12m_race_count,
+                trainer_5run_win_count,trainer_10run_win_count,trainer_6m_win_count,trainer_12m_win_count,
+                trainer_5run_top2_count,trainer_10run_top2_count,trainer_6m_top2_count,trainer_12m_top2_count,
+                trainer_5run_top3_count,trainer_10run_top3_count,trainer_6m_top3_count,trainer_12m_top3_count,
+                trainer_5run_win_rate,trainer_10run_win_rate,trainer_6m_win_rate,trainer_12m_win_rate,
+                trainer_5run_top2_rate,trainer_10run_top2_rate,trainer_6m_top2_rate,trainer_12m_top2_rate,
+                trainer_5run_top3_rate,trainer_10run_top3_rate,trainer_6m_top3_rate,trainer_12m_top3_rate,
+                trainer_5run_avg_rank,trainer_10run_avg_rank,trainer_6m_avg_rank,trainer_12m_avg_rank,
+                trainer_5run_avg_time_lag,trainer_10run_avg_time_lag,trainer_6m_avg_time_lag,trainer_12m_avg_time_lag,
+                trainer_5run_avg_ninki,trainer_10run_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
+                trainer_5run_avg_rank_minus_ninki,trainer_10run_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
+                trainer_5run_better_than_ninki_rate,trainer_10run_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
+            
+            summary_key=(race_id,umaban)
+            if summary_key in check_array:
+                print("重複を除外")
+                continue
+            else:
+                trainer_summary_array.append(data)
+                check_array.add(summary_key)
+            
+        summary_count=summary_count+1
+    print("調教師の集計完了")
+    target_array=trainer_summary_array
+    insert_flag=2
+    return target_array,insert_flag
+
+def jockey_summary(jockey_race_result_dict,jockey_id_array,today_day):
+    print("集約の値の算出開始")
+    summary_count=0
+    jockey_close_run_array=[]
+    jockey_summary_array=[]
+    check_array=set()
+    summary_key=() 
+
+    while len(jockey_id_array)>summary_count:
         
-        horse_close1year_fuku_array=[q for q in month12_array if q["rank"]==1 or q["rank"]==2 or q["rank"]==3]
-        horse_12m_fuku_count=len(horse_close1year_fuku_array)
-
-        #勝率を算出する
-        horse_5run_win_rate=horse_5run_race_count/horse_5run_win_count
-        horse_10run_win_rate=horse_10run_race_count/horse_10run_win_count
-        horse_6m_win_rate=horse_6m_race_count/horse_6m_win_count
-        horse_12m_win_rate=horse_12m_race_count/horse_12m_win_count
-
-        #連対率を算出する
-        horse_5run_top2_rate=horse_5run_race_count/horse_5run_rentai_count
-        horse_10run_top2_rate=horse_10run_race_count/horse_10run_rentai_count
-        horse_6m_top2_rate=horse_6m_race_count/horse_6m_rentai_count
-        horse_12m_top2_rate=horse_12m_race_count/horse_12m_rentai_count
-
-        #複勝率を算出する
-        horse_5run_top3_rate=horse_5run_race_count/horse_5run_fuku_count
-        horse_10run_top3_rate=horse_10run_race_count/horse_10run_fuku_count
-        horse_6m_top3_rate=horse_6m_race_count/horse_6m_fuku_count
-        horse_12m_top2_rate=horse_12m_race_count/horse_12m_fuku_count
-
-        #その他の項目を算出する
-        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
-        for e in horse_close5_run_array:
-            rank=int(e["rank"])
-            time_lag=int(e["time_lag"])
-            ninki=int(e["ninki"])
-            rank_sum=rank+rank_sum
-            time_lag_sum=time_lag_sum+time_lag
-            ninki_sum=ninki_sum+ninki
-            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-            if rank>ninki:
-                over_rank_count=over_rank_count+1
-        horse_5run_avg_rank=len(horse_close5_run_array)/rank_sum
-        horse_5run_avg_time_lag=len(horse_close5_run_array)/rank_sum
-        horse_5run_avg_ninki=len(horse_close5_run_array)/ninki_sum
-        horse_5run_avg_rank_minus_ninki=len(horse_close5_run_array)/rank_ninki_sum
-        horse_5run_better_than_ninki_rate=len(horse_close5_run_array)/over_rank_count
-        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
-
-        for e in horse_close10_run_array:
-            rank=e["rank"]
-            time_lag=int(e["time_lag"])
-            ninki=int(e["ninki"])
-            rank_sum=rank+rank_sum
-            time_lag_sum=time_lag_sum+time_lag
-            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-            if rank>ninki:
-                over_rank_count=over_rank_count+1
-        horse_10run_avg_rank=len(horse_close10_run_array)/rank_sum
-        horse_10run_avg_time_lag=len(horse_close10_run_array)/rank_sum
-        horse_10run_avg_ninki=len(horse_close10_run_array)/ninki_sum
-        horse_10run_avg_rank_minus_ninki=len(horse_close10_run_array)/rank_ninki_sum
-        horse_10run_better_than_ninki_rate=len(horse_close10_run_array)/over_rank_count
-        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
-
-        for e in month6_array:
-            rank=e["rank"]
-            time_lag=int(e["time_lag"])
-            ninki=int(e["ninki"])
-            rank_sum=rank+rank_sum
-            time_lag_sum=time_lag_sum+time_lag
-            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-            if rank>ninki:
-                over_rank_count=over_rank_count+1
-        horse_month6_avg_rank=len(month6_array)/rank_sum
-        horse_6m_avg_time_lag=len(month6_array)/rank_sum
-        horse_6m_avg_ninki=len(month6_array)/ninki_sum
-        horse_6m_avg_rank_minus_ninki=len(month6_array)/rank_ninki_sum
-        horse_6m_better_than_ninki_rate=len(month6_array)/over_rank_count
-        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
-
-        for e in month12_array:
-            rank=e["rank"]
-            time_lag=int(e["time_lag"])
-            ninki=int(e["ninki"])
-            rank_sum=rank+rank_sum
-            time_lag_sum=time_lag_sum+time_lag
-            rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-            if rank>ninki:
-                over_rank_count=over_rank_count+1
-        horse_month12_avg_rank=len(month12_array)/rank_sum
-        horse_12m_avg_time_lag=len(month12_array)/rank_sum
-        horse_12m_avg_ninki=len(month12_array)/ninki_sum
-        horse_12m_avg_rank_minus_ninki=len(month12_array)/rank_ninki_sum
-        horse_12m_better_than_ninki_rate=len(month12_array)/over_rank_count
-        rank,rank_sum,time_lag,time_lag_sum,ninki,ninki_sum,rank_ninki_sum,over_rank_count=0
-
+        jockey_id=jockey_id_array[summary_count]
+        target_array_origin=jockey_race_result_dict[jockey_id]
+        #処理しやすいように降順でソートする
+        target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         
+        #配列の中身と要素を取得する。
+        for target_index, r in enumerate(target_array_origin):
+            race_id=r["race_id"]
+            umaban=r["umaban"]
+            summary_day=today_day
 
-        
+            #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
+            target_array = target_array_origin[target_index + 1:]
+            
+            #テスト用パラメーター
+            #jockey_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
+            
+            #rank0を取り除いて有効出走数を算出する
+            jockey_close_run_array=[q for q in target_array if int(q["rank"])!=0]
+            jockey_close5_run_array=jockey_close_run_array[:5].copy()
+            jockey_5run_race_count=len(jockey_close5_run_array)
+            jockey_close10_run_array=jockey_close_run_array[:10].copy()
+            jockey_10run_race_count=len(jockey_close10_run_array)
+    
+            #6か月の有効出走数を集計する
+            #6か月前の日付を算出する
+            year=int(r["year"])
+            month=int(r["month"])
+            day=int(r["day"])
+            before_6month=month-6
+            if before_6month<=0:
+                before_6year=year-1
+                before_6month=12+before_6month
+            else:
+                before_6year=year
 
+            jockey_close6month_run_array=jockey_close_run_array.copy()
+            under_day_1=before_6year*10000+before_6month*100+day
+
+            month6_array=[s for s in jockey_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            jockey_6m_race_count=len(month6_array)
+
+            jockey_close1year_run_array=jockey_close6month_run_array.copy()
+            before_12year=year-1
+
+            under_day_2=before_12year*10000+month*100+day
+            month12_array=[s for s in jockey_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            jockey_12m_race_count=len(month12_array)
+
+            #一着回数を算出する
+            jockey_close5_win1_array=[q for q in jockey_close5_run_array if int(q["rank"])==1]
+            jockey_5run_win_count=len(jockey_close5_win1_array)
+
+            jockey_close10_win1_array=[q for q in jockey_close10_run_array if int(q["rank"])==1]
+            jockey_10run_win_count=len(jockey_close10_win1_array)
+
+            jockey_close6month_win1_array=[q for q in month6_array if int(q["rank"])==1]
+            jockey_6m_win_count=len(jockey_close6month_win1_array)
+            
+            jockey_close1year_win1_array=[q for q in month12_array if int(q["rank"])==1]
+            jockey_12m_win_count=len(jockey_close1year_win1_array)
+
+            #連対回数を算出する
+            jockey_close5_rentai_array=[q for q in jockey_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            jockey_5run_top2_count=len(jockey_close5_rentai_array)
+
+            jockey_close10_rentai_array=[q for q in jockey_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2]
+            jockey_10run_top2_count=len(jockey_close10_rentai_array)
+
+            jockey_close6month_rentai_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2]
+            jockey_6m_top2_count=len(jockey_close6month_rentai_array)
+            
+            jockey_close1year_rentai_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2]
+            jockey_12m_top2_count=len(jockey_close1year_rentai_array)
+
+            #複勝を算出する
+            jockey_close5_fuku_array=[q for q in jockey_close5_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            jockey_5run_top3_count=len(jockey_close5_fuku_array)
+
+            jockey_close10_fuku_array=[q for q in jockey_close10_run_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            jockey_10run_top3_count=len(jockey_close10_fuku_array)
+
+            jockey_close6month_fuku_array=[q for q in month6_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            jockey_6m_top3_count=len(jockey_close6month_fuku_array)
+            
+            jockey_close1year_fuku_array=[q for q in month12_array if int(q["rank"])==1 or int(q["rank"])==2 or int(q["rank"])==3]
+            jockey_12m_top3_count=len(jockey_close1year_fuku_array)
+
+            #勝率を算出する
+            target_count=jockey_5run_win_count
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_win_rate=cal_result
+
+            target_count=jockey_10run_win_count
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_win_rate=cal_result
+
+            target_count=jockey_6m_win_count
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_win_rate=cal_result
+            
+            target_count=jockey_12m_win_count
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_win_rate=cal_result
+
+            #連対率を算出する
+            target_count=jockey_5run_top2_count
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_top2_rate=cal_result
+
+            target_count=jockey_10run_top2_count
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_top2_rate=cal_result
+
+            target_count=jockey_6m_top2_count
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_top2_rate=cal_result
+
+            target_count=jockey_12m_top2_count
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_top2_rate=cal_result
+
+            #複勝率を算出する
+            target_count=jockey_5run_top3_count
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_top3_rate=cal_result
+
+            target_count=jockey_10run_top3_count
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_top3_rate=cal_result
+
+            target_count=jockey_6m_top3_count
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_top3_rate=cal_result
+
+            target_count=jockey_12m_top3_count
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_top3_rate=cal_result
+
+            #その他の項目を算出する
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in jockey_close5_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=jockey_5run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_5run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in jockey_close10_run_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=jockey_10run_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_10run_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in month6_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            for e in month12_array:
+                rank=int(e["rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                rank_sum=rank+rank_sum
+                time_lag_sum=time_lag_sum+time_lag
+                ninki_sum=ninki_sum+ninki
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                if rank<ninki:
+                    over_rank_count=over_rank_count+1
+
+            target_count=rank_sum
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+
+            data=[race_id,umaban,summary_day, jockey_id,
+                jockey_5run_race_count,jockey_10run_race_count,jockey_6m_race_count,jockey_12m_race_count,
+                jockey_5run_win_count,jockey_10run_win_count,jockey_6m_win_count,jockey_12m_win_count,
+                jockey_5run_top2_count,jockey_10run_top2_count,jockey_6m_top2_count,jockey_12m_top2_count,
+                jockey_5run_top3_count,jockey_10run_top3_count,jockey_6m_top3_count,jockey_12m_top3_count,
+                jockey_5run_win_rate,jockey_10run_win_rate,jockey_6m_win_rate,jockey_12m_win_rate,
+                jockey_5run_top2_rate,jockey_10run_top2_rate,jockey_6m_top2_rate,jockey_12m_top2_rate,
+                jockey_5run_top3_rate,jockey_10run_top3_rate,jockey_6m_top3_rate,jockey_12m_top3_rate,
+                jockey_5run_avg_rank,jockey_10run_avg_rank,jockey_6m_avg_rank,jockey_12m_avg_rank,
+                jockey_5run_avg_time_lag,jockey_10run_avg_time_lag,jockey_6m_avg_time_lag,jockey_12m_avg_time_lag,
+                jockey_5run_avg_ninki,jockey_10run_avg_ninki,jockey_6m_avg_ninki,jockey_12m_avg_ninki,           
+                jockey_5run_avg_rank_minus_ninki,jockey_10run_avg_rank_minus_ninki,jockey_6m_avg_rank_minus_ninki,jockey_12m_avg_rank_minus_ninki,
+                jockey_5run_better_than_ninki_rate,jockey_10run_better_than_ninki_rate,jockey_6m_better_than_ninki_rate,jockey_12m_better_than_ninki_rate]
+            
+            summary_key=(race_id,umaban)
+            if summary_key in check_array:
+                print("重複を除外")
+                continue
+            else:
+                jockey_summary_array.append(data)
+                check_array.add(summary_key)
+                
+        summary_count=summary_count+1
+    insert_flag=3
+    target_array=jockey_summary_array
+    print("騎手の集計完了")
+    return jockey_summary_array,insert_flag
+
+def cal_rate_and_ave(target_count,race_count):
+    if race_count==0:
+        cal_result=0
+        return cal_result
+    else:
+        cal_result=target_count/race_count
+        return cal_result
+
+def summary_insert(conn,cursor,target_array,insert_flag):
+    #インサート処理
+    if insert_flag==1:
+        insert_sql="insert into horse_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.executemany(insert_sql, target_array)
+        conn.commit()
+        print("インサート処理が完了しました")
+            
+    elif insert_flag==2:
+        insert_sql="insert into trainer_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.executemany(insert_sql, target_array)
+        conn.commit()
+        print("インサート処理が完了しました")
+
+    elif insert_flag==3:
+        insert_sql="insert into jockey_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+        cursor.executemany(insert_sql, target_array)
+        conn.commit()
+        print("インサート処理が完了しました")
 
 
 
