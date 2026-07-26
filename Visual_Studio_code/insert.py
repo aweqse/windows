@@ -27,30 +27,30 @@ def main():
     today=date.today()
     now = today.strftime("%Y%m%d")
     print("時刻の取得完了")
-    conn,cursor=connect_mysrl()
+    conn,cursor=connect_mysql()
     make_dir()
     insert_race_result_csv_dir=config.insert_race_result_csv_dir
     insert_odds_csv_dir=config.insert_odds_csv_dir
     insert_horse_csv_dir=config.insert_horse_csv_dir
     output_csv=config.output_csv
-    race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
-    horse_array=horsde_get_filename(insert_horse_csv_dir)
+    race_result_filename_array=race_result_get_filename(insert_race_result_csv_dir)
+    horse_array=horse_get_filename(insert_horse_csv_dir)
     odds_array=odds_get_filename(insert_odds_csv_dir)
     print("フォルダ内の初期のファイル名の取得完了")
 
-    #mysrlのdump（バックアップを取得処理を追加する)
-    print("mysrlのdump開始")
-    dump_mysrl()
+    #mysqlのdump（バックアップを取得処理を追加する)
+    print("mysqlのdump開始")
+    dump_mysql()
 
-    while len(race_result_filenam_array)!=0:
+    while len(race_result_filename_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
-        target_file=race_result_filenam_array[0]
+        target_file=race_result_filename_array[0]
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
         move_filename=output_csv+"\\"+target_file
         print("データのチェックを開始")
-        race_result_inssert_data,fixed_flag,sent_mail_stop_array,sent_mail_double_array=check_data(target_file_path)
+        race_result_insert_data,fixed_flag,sent_mail_stop_array,sent_mail_double_array=check_data(target_file_path)
         print("辞書を配列に変換開始")
-        from_dict_to_converted_array=convert_form_dict_to_list(race_result_inssert_data)
+        from_dict_to_converted_array=convert_form_dict_to_list(race_result_insert_data)
 
         #修正したcsvを書き出す処理
         export_csv_path=target_file_path
@@ -65,18 +65,18 @@ def main():
         
         #データの集約
         print("データの集計を開始します。")
-        horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_palce_dict,horse_distance_group_dict,horse_corse_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_palce_key_array,horse_distance_group_key_array,horse_corse_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
-        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,now)
+        horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
+        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=trainer_summary(trainer_race_result_dict,trainer_id_array,now)
+        target_array,insert_flag=trainer_summary(trainer_race_result_dict,trainer_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=jockey_summary(jockey_race_result_dict,jockey_id_array,now)
+        target_array,insert_flag=jockey_summary(jockey_race_result_dict,jockey_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_place_summary(horse_id_palce_dict,horse_id_and_palce_key_array)
+        target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array)
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_course_distance_summary(horse_corse_distancerace_dict,horse_corse_distancerace_key_array) 
+        target_array,insert_flag=horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array) 
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array)
         summary_insert(conn,cursor,target_array,insert_flag)
@@ -99,7 +99,7 @@ def main():
         #この処理は必ず最後に置く
         fixed_flag=0
         move_file(target_file_path,move_filename)
-        race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+        race_result_filename_array=race_result_get_filename(insert_race_result_csv_dir)
         
     while len(horse_array)!=0:
         #馬情報の処理
@@ -107,9 +107,9 @@ def main():
         target_file_path=insert_horse_csv_dir+"\\"+target_file
         print("馬情報のインサート開始")
         insert_horse(target_file_path,conn,cursor,now)
-        move_filename=output_csv+"\\"+target_file
+        move_filename=output_csv+"\\raw_"+target_file
         move_file(target_file_path,move_filename)
-        horse_array=horsde_get_filename(insert_horse_csv_dir)
+        horse_array=horse_get_filename(insert_horse_csv_dir)
 
     while len(odds_array)!=0:
         #オッズ情報の処理
@@ -122,7 +122,7 @@ def main():
         odds_array=odds_get_filename(insert_odds_csv_dir)
 
     #trainer_infoの処理
-    insert_array,updata_array=make_trainer_data(cursor,now)
+    insert_array,update_array=make_trainer_data(cursor,now)
     if len(insert_array)!=0:
         fixed_flag=3
         from_dict_to_converted_array=insert_array.copy()
@@ -131,17 +131,18 @@ def main():
         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         print("trainer_infoのインサート処理開始")
         insert_trainer_info(insert_array,conn,cursor)
-    elif len(updata_array)!=0:
+
+    if len(update_array)!=0:
         fixed_flag=3
-        from_dict_to_converted_array=updata_array.copy()
+        from_dict_to_converted_array=update_array.copy()
         print("csvの書き出し処理開始")
-        target_file="trainer_updata_"+str(now)+".csv"
+        target_file="trainer_update_"+str(now)+".csv"
         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         print("trainer_infoのアップデート処理開始")
-        updata_trainer_info(updata_array,conn,cursor)
+        update_trainer_info(update_array,conn,cursor)
 
     #jockey_infoの処理
-    insert_array,updata_array=make_jockey_info(cursor,now)
+    insert_array,update_array=make_jockey_info(cursor,now)
     if len(insert_array)!=0:
         fixed_flag=4
         from_dict_to_converted_array=insert_array.copy()
@@ -150,14 +151,15 @@ def main():
         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         print("jockey_infoのインサート処理開始")
         insert_jockey_info(insert_array,conn,cursor)
-    elif len(updata_array)!=0:
+
+    if len(update_array)!=0:
         fixed_flag=4
-        from_dict_to_converted_array=updata_array.copy()
+        from_dict_to_converted_array=update_array.copy()
         print("csvの書き出し処理開始")
-        target_file="jockey_updata_"+str(now)+".csv"
+        target_file="jockey_update_"+str(now)+".csv"
         make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         print("jockey_infoのアップデート処理開始")
-        updata_jockey_info(updata_array,conn,cursor)
+        update_jockey_info(update_array,conn,cursor)
 
     #すべてのcsvをファイルサーバーに移動する
     #windowsからファイルサーバーにおくる方式に変更する
@@ -169,11 +171,10 @@ def main():
     print("クラウドにバックアップ終了")
     
     #windowsのローカルファイルを削除する
-    delete_sorce_file()
+    delete_source_file()
     print("すべての処理完了！！")
 
-
-def connect_mysrl():
+def connect_mysql():
     sql_pass=config.sql_pass
     # DB接続 
     conn = mysql.connector.connect(
@@ -207,7 +208,7 @@ def odds_get_filename(insert_odds_csv_dir):
             odds_array.append(file_name)
     return odds_array
 
-def horsde_get_filename(insert_horse_csv_dir):
+def horse_get_filename(insert_horse_csv_dir):
     #horseを出力するフォルダからcsvファイルの一覧を取得する。
     horse_array=[]
     folder_path = Path(insert_horse_csv_dir)
@@ -219,8 +220,8 @@ def horsde_get_filename(insert_horse_csv_dir):
 
 #レース情報の処理
 def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
-    insert_ruery="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    cursor.executemany(insert_ruery, for_insert_and_make_csv_array)
+    insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    cursor.executemany(insert_query, for_insert_and_make_csv_array)
     conn.commit()
     print("レース結果をコミットしました。")
 
@@ -234,8 +235,8 @@ def insert_horse(target_file_path,conn,cursor,now):
     run_row_dict_count=0
 
     #insertかupdateか判断するための配列を取得
-    judge_ruery="select horse_id,sex,trainer_id,trainer_name,owner_name,owner_id,final_run_day,reject_jra_date,trainer_belong_area from horse_info;"
-    cursor.execute(judge_ruery)
+    judge_query="select horse_id,sex,trainer_id,trainer_name,owner_name,owner_id,final_run_day,reject_jra_date,trainer_belong_area from horse_info;"
+    cursor.execute(judge_query)
     judge_data_array = cursor.fetchall()
     print("差分比較用の情報取得完了")
 
@@ -250,8 +251,8 @@ def insert_horse(target_file_path,conn,cursor,now):
         jugde_dict_count=jugde_dict_count+1
     print("差分比較用の辞書の作成完了")
 
-    run_day_ruery="select horse_id,min(year*10000+month*100+day)AS first_run_day,max(year*10000+month*100+day)AS final_run_day from race_result group by horse_id;"
-    cursor.execute(run_day_ruery)
+    run_day_query="select horse_id,min(year*10000+month*100+day)AS first_run_day,max(year*10000+month*100+day)AS final_run_day from race_result group by horse_id;"
+    cursor.execute(run_day_query)
     run_row = cursor.fetchall()
     print("出走日に関する情報取得完了")
 
@@ -317,12 +318,12 @@ def insert_horse(target_file_path,conn,cursor,now):
                 print("インサート配列にデータの格納完了")
 
         if len(insert_horse_array)!=0:
-            insert_ruery="insert into horse_info values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_ruery, insert_horse_array)
+            insert_query="insert into horse_info values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            cursor.executemany(insert_query, insert_horse_array)
         
         if len(update_horse_array)!=0:
-            updata_ruery="update horse_info set sex=%s,trainer_name=%s,trainer_id=%s,owner_name=%s,owner_id=%s,final_run_day=%s,reject_jra_date=%s,belong_area=%s,last_update=%s where horse_info.horse_id=%s;"      
-            cursor.executemany(updata_ruery, update_horse_array)
+            update_query="update horse_info set sex=%s,trainer_name=%s,trainer_id=%s,owner_name=%s,owner_id=%s,final_run_day=%s,reject_jra_date=%s,belong_area=%s,last_update=%s where horse_info.horse_id=%s;"      
+            cursor.executemany(update_query, update_horse_array)
 
         conn.commit()
         print("コミット完了")
@@ -335,8 +336,8 @@ def insert_odds(target_file_path,target_file,conn,cursor):
         insert_odds_array=[]
         total_array=[]
 
-        start_race_time_ruery="select race_id,start_race_time from race_result;"
-        cursor.execute(start_race_time_ruery)
+        start_race_time_query="select race_id,start_race_time from race_result;"
+        cursor.execute(start_race_time_query)
         start_race_time_array = cursor.fetchall()
         print("発送時刻を取得完了")
         
@@ -396,16 +397,15 @@ def insert_odds(target_file_path,target_file,conn,cursor):
                 total_array.extend(insert_odds_array)
                 insert_odds_array=[]
                 if len(total_array)>10000:
-                    insert_ruery="insert into race_odds values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-                    cursor.executemany(insert_ruery, total_array)
+                    insert_query="insert into race_odds values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+                    cursor.executemany(insert_query, total_array)
                     conn.commit()
                     total_array=[]
                     print("暫定コミット完了")
-                    
             
             #あふれた行をインサートする
-            insert_ruery="insert into race_odds values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_ruery, total_array)
+            insert_query="insert into race_odds values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            cursor.executemany(insert_query, total_array)
             conn.commit()
             print("コミット完了")
 
@@ -417,7 +417,7 @@ def win_and_fuku_processing(insert_odds_array,row,race_id,snapshot_min,start_rac
     #最大出走頭数が18頭だから19>にする
     while 19>umaban_count:
         win_search_str=str(umaban_count)+"単"
-        min_fuku_serach_odds=str(umaban_count)+"複Lo"
+        min_fuku_search_odds=str(umaban_count)+"複Lo"
         max_fuku_search_odds=str(umaban_count)+"複Hi"
         if row[str(win_search_str)]!=None:
             #単勝の場合
@@ -440,7 +440,7 @@ def win_and_fuku_processing(insert_odds_array,row,race_id,snapshot_min,start_rac
             #複勝の場合
             ticket_type=2
             odds=0
-            min_odds=float(row[min_fuku_serach_odds])
+            min_odds=float(row[min_fuku_search_odds])
             max_odds=float(row[max_fuku_search_odds])
             odds_log=0
 
@@ -482,9 +482,9 @@ def umaren_processing(insert_odds_array,row,race_id,snapshot_min,start_race_time
             umaban1="0"+str(umaban1)
         if len(str(umaban2))==1:
             umaban2="0"+str(umaban2)
-        search_styr="馬"+str(umaban1)+"-"+str(umaban2)
+        search_str="馬"+str(umaban1)+"-"+str(umaban2)
          
-        odds=float(row[search_styr])
+        odds=float(row[search_str])
         if odds==0:
             umaban2=int(umaban2)+1
             #オッズが0の場合はスキップする
@@ -527,12 +527,12 @@ def convert_null(data):
     return data
         
 def move_file(target_file_path,move_filename):
-    soruce_path=Path(target_file_path)
+    source_path=Path(target_file_path)
     dest_path=Path(move_filename)
     #転送先を〜csvフォルダにする
     if dest_path.exists():
         dest_path.unlink()
-    shutil.move(soruce_path,dest_path)
+    shutil.move(source_path,dest_path)
     print("csvファイルの移動が完了しました")
 
 def make_trainer_data(cursor,now):
@@ -540,11 +540,11 @@ def make_trainer_data(cursor,now):
     trainer_info_dict={}
     race_result_dict={}
     insert_array=[]
-    updata_array=[]
+    update_array=[]
 
     #race_resultから更新候補の一覧を取得する
-    make_dict_ruery="select trainer_id,trainer_name,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer_name,trainer_belong_area;"
-    cursor.execute(make_dict_ruery)
+    make_dict_query="select trainer_id,trainer_name,trainer_belong_area,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by trainer_id,trainer_name,trainer_belong_area;"
+    cursor.execute(make_dict_query)
     trainer_race_result_array = cursor.fetchall()
 
     #辞書を作成する
@@ -554,8 +554,8 @@ def make_trainer_data(cursor,now):
         print("race_resultからの情報取得完了")
 
     #trainer_infoから更新候補と比較して差分があればupdate処理、noneならinsert処理に分岐する
-    trainer_info_ruery="select * from trainer_info;"
-    cursor.execute(trainer_info_ruery)
+    trainer_info_query="select * from trainer_info;"
+    cursor.execute(trainer_info_query)
     trainer_info_array = cursor.fetchall()
 
     #activeは全部のカラムが対象なので辞書とは別に全部の要素を配列に入れて全配列チェックする
@@ -584,49 +584,49 @@ def make_trainer_data(cursor,now):
             continue
     
         #trainer_infoの配列をactiveとbelong_areaをCheckして当てはまればかきかえる。
-        #書き換えたら必ず､差分がでるのでupdata.arrayrrに格納する
-        #書き替えがない場合は比較して差分があればupdata.arraに格納する。
+        #書き換えたら必ず､差分がでるのでupdate.arrayrrに格納する
+        #書き替えがない場合は比較して差分があればupdate.arraに格納する。
         #差分を比較する値のみ取り出す。activeのみtrainer_infoから抽出する
         active=trainer_info_dict[trainer_id]["active"]   
         belong_area=race_result_dict[trainer_id]["trainer_belong_area"]
         last_run=race_result_dict[trainer_id]["last_run"]
         belong_update=None
-        updata_flag=0
+        update_flag=0
 
         #active_checkのチェック 
         if active!=0:
             if int(trainer_info_dict[trainer_id]["last_run"])+20000<int(now):
                 active=0
-                updata_flag=1
+                update_flag=1
             #belong_area_check       
             if trainer_info_dict[trainer_id]["trainer_belong_area"]!=race_result_dict[trainer_id]["trainer_belong_area"]:
                 belong_update=now
-                updata_flag=1
+                update_flag=1
             if trainer_info_dict[trainer_id]["last_run"]!=race_result_dict[trainer_id]["last_run"]:
                 last_run=race_result_dict[trainer_id]["last_run"]
-                updata_flag=1
+                update_flag=1
 
-            if updata_flag==1:
+            if update_flag==1:
                 data=[active,belong_area,belong_update,last_run,trainer_id]
-                updata_array.append(data)
-                print("差分あり、updata配列に格納")
+                update_array.append(data)
+                print("差分あり、update配列に格納")
             else:
                 print("差分なし")
         else:
             print("更新対象外です")
 
-    return insert_array,updata_array
+    return insert_array,update_array
 
 def make_jockey_info(cursor,now):
     print("騎手の更新処理開始")
     jockey_race_result_info_dict={}
     jockey_info_dict={}
     insert_array=[]
-    updata_array=[]
+    update_array=[]
 
     #race_resultから更新候補を取り出す
-    jockey_race_result_ruery="select jockey_id,jockey_name,jockey_belong_area,jockey_free,jockey_belong_trainer_id,jockey_belong_trainer_name,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by jockey_id,jockey_name,jockey_belong_area,jockey_free,jockey_belong_trainer_id,jockey_belong_trainer_name;"
-    cursor.execute(jockey_race_result_ruery)
+    jockey_race_result_query="select jockey_id,jockey_name,jockey_belong_area,jockey_free,jockey_belong_trainer_id,jockey_belong_trainer_name,min(year*10000+month*100+day) as first_run,max(year*10000+month*100+day) as last_run from race_result group by jockey_id,jockey_name,jockey_belong_area,jockey_free,jockey_belong_trainer_id,jockey_belong_trainer_name;"
+    cursor.execute(jockey_race_result_query)
     jockey_race_result_info = cursor.fetchall()
 
     #辞書を作成する
@@ -635,8 +635,8 @@ def make_jockey_info(cursor,now):
             jockey_race_result_info_dict[row["jockey_id"]]={"jockey_name":row["jockey_name"],"jockey_belong_area":row["jockey_belong_area"],"jockey_free":row["jockey_free"],"jockey_belong_trainer_id":row["jockey_belong_trainer_id"],"jockey_belong_trainer_name":row["jockey_belong_trainer_name"],"first_run":row["first_run"],"last_run":row["last_run"]}
         print("race_resultからの情報取得完了")
 
-    jockey_info_ruery="select * from jockey_info;"
-    cursor.execute(jockey_info_ruery)
+    jockey_info_query="select * from jockey_info;"
+    cursor.execute(jockey_info_query)
     jockey_info_array = cursor.fetchall()
 
     if len(jockey_info_array)!=0:
@@ -650,58 +650,58 @@ def make_jockey_info(cursor,now):
         #trainer_infoのtraner_idが辞書が該当すれば比較してupdate処理、なければinsert処理
         #insert処理
         if value==None:
-            jocket_name=jockey_race_result_info_dict[jockey_id]["jockey_name"]
+            jockey_name=jockey_race_result_info_dict[jockey_id]["jockey_name"]
             jockey_belong_area=jockey_race_result_info_dict[jockey_id]["jockey_belong_area"]
             free=jockey_race_result_info_dict[jockey_id]["jockey_free"]
             jockey_belong_jockey_id=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_id"]
-            jockey_belong_jockey_name=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_name"]
+            jockey_belong_trainer_name=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_name"]
             jockey_belong_update=None
             active=1
             first_run=jockey_race_result_info_dict[jockey_id]["first_run"]
             last_run=jockey_race_result_info_dict[jockey_id]["last_run"]
-            data=[jockey_id,jocket_name,jockey_belong_area,free,jockey_belong_jockey_id,jockey_belong_jockey_name,jockey_belong_update,active,first_run,last_run]
+            data=[jockey_id,jockey_name,jockey_belong_area,free,jockey_belong_jockey_id,jockey_belong_trainer_name,jockey_belong_update,active,first_run,last_run]
             #trainer_idで重複チェックする
             insert_array.append(data)
             continue
         #差分を比較するために値を抽出する。
         active=jockey_info_dict[jockey_id]["active"]
-        belong_updata=jockey_info_dict[jockey_id]["belong_update"]
+        belong_update=jockey_info_dict[jockey_id]["belong_update"]
         jockey_belong_area=jockey_race_result_info_dict[jockey_id]["jockey_belong_area"]
         free=jockey_race_result_info_dict[jockey_id]["jockey_free"]
         jockey_belong_jockey_id=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_id"]
-        jockey_belong_jockey_name=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_name"]
+        jockey_belong_trainer_name=jockey_race_result_info_dict[jockey_id]["jockey_belong_trainer_name"]
         last_run=jockey_race_result_info_dict[jockey_id]["last_run"]
-        updata_flag=0
+        update_flag=0
 
         if active!=0:
             #freeのチェック
             if free!=jockey_info_dict[jockey_id]["free"]:
                 if free==0:
                     free=1
-                    jockey_belong_jockey_name=None
-                    updata_flag=1 
+                    jockey_belong_trainer_name=None
+                    update_flag=1 
                 elif free==1:
                     free=0
-                    updata_flag=1
+                    update_flag=1
             if int(jockey_info_dict[jockey_id]["last_run"])+20000<int(now):
                 active=0
-                updata_flag=1
+                update_flag=1
             if jockey_belong_area!=jockey_info_dict[jockey_id]["jockey_belong_area"]:
-                belong_updata=now
-                updata_flag=1
+                belong_update=now
+                update_flag=1
             if last_run!=jockey_info_dict[jockey_id]["last_run"]:
-                updata_flag=1
+                update_flag=1
 
-            if updata_flag==1:
-                data=[jockey_belong_area,free,jockey_belong_jockey_id,jockey_belong_jockey_name,belong_updata,active,last_run,jockey_id]
-                updata_array.append(data)
-                print("差分あり、updata配列に格納")
+            if update_flag==1:
+                data=[jockey_belong_area,free,jockey_belong_jockey_id,jockey_belong_trainer_name,belong_update,active,last_run,jockey_id]
+                update_array.append(data)
+                print("差分あり、update配列に格納")
             else:
                 print("差分なし")
         else:
             print("更新対象外です")
 
-    return insert_array,updata_array
+    return insert_array,update_array
         
 def insert_trainer_info(insert_array,conn,cursor):
     #インサート処理
@@ -710,29 +710,29 @@ def insert_trainer_info(insert_array,conn,cursor):
     conn.commit()
     print("インサート処理が完了しました")
 
-def updata_trainer_info(updata_array,conn,cursor):
-    #updata処理
-    updata_ruery="update trainer_info set active=%s,trainer_belong_area=%s,belong_update=%s,last_run=%s where trainer_id=%s;"
-    cursor.executemany(updata_ruery, updata_array)
+def update_trainer_info(update_array,conn,cursor):
+    #update処理
+    update_query="update trainer_info set active=%s,trainer_belong_area=%s,belong_update=%s,last_run=%s where trainer_id=%s;"
+    cursor.executemany(update_query, update_array)
     conn.commit()
     print("アップデート処理が完了しました。")
 
 def insert_jockey_info(insert_array,conn,cursor):
-    insert_ruery="insert into jockey_info values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    cursor.executemany(insert_ruery, insert_array)
+    insert_query="insert into jockey_info values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+    cursor.executemany(insert_query, insert_array)
     conn.commit()
     print("インサート処理が完了しました")
 
-def updata_jockey_info(updata_array,conn,cursor):
-    updata_ruery="update jockey_info set jockey_belong_area=%s,free=%s,jockey_belong_trainer_id=%s,jockey_belong_trainer_name=%s,belong_update=%s,active=%s,last_run=%s where jockey_id=%s;"
-    cursor.executemany(updata_ruery, updata_array)
+def update_jockey_info(update_array,conn,cursor):
+    update_query="update jockey_info set jockey_belong_area=%s,free=%s,jockey_belong_trainer_id=%s,jockey_belong_trainer_name=%s,belong_update=%s,active=%s,last_run=%s where jockey_id=%s;"
+    cursor.executemany(update_query, update_array)
     conn.commit()
     print("アップデート処理が完了しました。")
 
 def check_data(target_file_path):
-    race_result_inssert_data={}
+    race_result_insert_data={}
     race_id_array=[]
-    unir_key_array=[]
+    unique_key_array=[]
     check_array_count=0
     sent_mail_stop_array=[]
     sent_mail_double_array=[]
@@ -804,29 +804,29 @@ def check_data(target_file_path):
             # race_idだけだと代替開催・取りやめで混ざるので年月日を足す
             print("拡張レースIDの取得開始")
             race_id = row["race_id"] + row["year"] + row["month"] + row["day"]
-            if race_id not in race_result_inssert_data:
-                race_result_inssert_data[race_id] = []
-            race_result_inssert_data[race_id].append(data)
+            if race_id not in race_result_insert_data:
+                race_result_insert_data[race_id] = []
+            race_result_insert_data[race_id].append(data)
             race_id_array.append(race_id)
 
             print("馬番重複用配列の取得開始")
-            unir_key=row["race_id"]+row["umaban"]
-            unir_key_array.append(unir_key)
+            unique_key=row["race_id"]+row["umaban"]
+            unique_key_array.append(unique_key)
 
         # race_id_arrayの重複を削除する
         race_id_array = list(set(race_id_array))
 
-        #unir_key_arrayの重複を削除する
-        unir_key_array = list(set(unir_key_array))
+        #unique_key_arrayの重複を削除する
+        unique_key_array = list(set(unique_key_array))
 
         # rankの値を検査する
         while len(race_id_array) > check_array_count:
             print("レース取りやめの検査開始")
             race_id = race_id_array[check_array_count]
-            rank_cheak_array = race_result_inssert_data[race_id]
+            rank_cheak_array = race_result_insert_data[race_id]
             # rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
             if all(int(e[48]) == 0 for e in rank_cheak_array):
-                del race_result_inssert_data[race_id]
+                del race_result_insert_data[race_id]
                 # 通知には元のrace_idだけ入れる
                 if rank_cheak_array[0][0] not in sent_mail_stop_array:
                     sent_mail_stop_array.append(rank_cheak_array[0][0])
@@ -838,10 +838,10 @@ def check_data(target_file_path):
             print("馬番被りの検査開始")
             for r in rank_cheak_array:
                 unir_value=str(r[0])+str(r[30])
-                if unir_value in unir_key_array:
-                    unir_key_array.remove(unir_value)
+                if unir_value in unique_key_array:
+                    unique_key_array.remove(unir_value)
                 else:
-                    race_result_inssert_data.pop(race_id, None)
+                    race_result_insert_data.pop(race_id, None)
                     if r[0] not in sent_mail_double_array:
                         sent_mail_double_array.append(r[0])
                     fixed_flag = 1
@@ -850,7 +850,7 @@ def check_data(target_file_path):
                     break
             check_array_count = check_array_count + 1
 
-        return race_result_inssert_data, fixed_flag, sent_mail_stop_array,sent_mail_double_array
+        return race_result_insert_data, fixed_flag, sent_mail_stop_array,sent_mail_double_array
 
 def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
@@ -859,7 +859,7 @@ def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
             "race_class","grade","weight_type","only_hinba","weather","turf_condition","dirt_condition","start_race_time","entry","wakuban","umaban","horse_id",
             "horse_name","sex","horse_age","horse_weight","horse_weight_increase","carried_weight","jockey_id","jockey_name","jockey_belong_area","jockey_free","jockey_belong_trainer_id",
             "jockey_belong_trainer_name","trainer_id","trainer_name","trainer_belong_area","abnormal_code","rank","ninki","race_time",
-            "corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","time_lag"]
+            "corner_1_rank","corner_2_rank","corner_3_rank","corner_4_rank","last_3_furlong_time","last_3_furlong_rank","time_lag"]
 
         if fixed_flag==1:
             target_file=target_file.replace(".csv","")
@@ -873,12 +873,12 @@ def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
 
     #trainer_infoの場合
     elif fixed_flag==3:
-        header=["trainer_id","trainer_name","trainer_belong_area","belong_updata","active","firist_run","last_run"]
+        header=["trainer_id","trainer_name","trainer_belong_area","belong_update","active","first_run","last_run"]
         export_csv_path=output_csv+"\\"+target_file
     
     #jockey_infoの場合
     elif fixed_flag==4:
-        header=["jockey_id","jockey_name","jockey_belong_area","free","jockey_belong_trainer_id","jockey_belong_trainer_name","belong_update","active","firist_run","last_run"]
+        header=["jockey_id","jockey_name","jockey_belong_area","free","jockey_belong_trainer_id","jockey_belong_trainer_name","belong_update","active","first_run","last_run"]
         export_csv_path=output_csv+"\\"+target_file
     
     #csv書き出し処理
@@ -918,7 +918,7 @@ def sent_mail(sent_mail_stop_array,sent_mail_double_array):
         subject = "インサートcsv不備"
         send_text = (
             "CSVにレース取りやめがあります。\n"
-            "手動での対処は必要ないはずですが念のためmysrlで対象のレースIDを条件にrankを検索して0出ないことを確認してください。\n"
+            "手動での対処は必要ないはずですが念のためmysqlで対象のレースIDを条件にrankを検索して0出ないことを確認してください。\n"
             f"レースIDは \n {str} です。"
         )
 
@@ -954,7 +954,7 @@ def sent_mail(sent_mail_stop_array,sent_mail_double_array):
         subject = "インサートcsv不備"
         send_text = (
             "CSVに馬番の重複があります。\n"
-            "記載されているレースIDは中途半端にmysrlに登録されている可能性があるのでレースIDで検索して必要ならば削除してください。その後、CSVを修正しインサート処理を実行してください\n"
+            "記載されているレースIDは中途半端にmysqlに登録されている可能性があるのでレースIDで検索して必要ならば削除してください。その後、CSVを修正しインサート処理を実行してください\n"
             f"レースIDは \n {str} です。"
         )
 
@@ -986,8 +986,8 @@ def convert_form_dict_to_list(target_dict):
         from_dict_to_converted_array.extend(e)
     return from_dict_to_converted_array
     
-def dump_mysrl():
-    subprocess.run(["ssh","root@192.168.1.108","bash","/root/mysrl/script/make_dump_and_move"])
+def dump_mysql():
+    subprocess.run(["ssh","root@192.168.1.108","bash","/root/mysql/script/make_dump_and_move"])
 
 def make_dir():
     #公開鍵認証必須
@@ -1000,7 +1000,7 @@ def export_csv_to_fileserver():
     code_path="C:\\Users\\dev-w\\Desktop\\workspace\\output\\script\\from_local_to_server.ps1"
     subprocess.run(["powershell","-ExecutionPolicy","Bypass","-File",code_path],check=True)
 
-def delete_sorce_file():
+def delete_source_file():
     target_dir=Path(r"C:\\Users\\dev-w\\Desktop\\workspace\\output\\csv")
     for item in target_dir.iterdir():
         if item.is_dir():
@@ -1012,9 +1012,9 @@ def make_summary_dict(export_csv_path,cursor):
     horse_race_result_dict={}
     trainer_race_result_dict={}
     jockey_race_result_dict={}
-    horse_id_palce_dict={}
+    horse_id_place_dict={}
     horse_distance_group_dict={}
-    horse_corse_distancerace_dict={}
+    horse_course_distancerace_dict={}
     horse_course_type_dict={}
     horse_turn_direction_dict={}
     turf_course_type_dict={}
@@ -1027,12 +1027,13 @@ def make_summary_dict(export_csv_path,cursor):
     horse_id_array=[]
     trainer_id_array=[]
     jockey_id_array=[]
+    ymd_array=[]
     year_array=[]
     month_array=[]
     day_array=[]
-    horse_id_and_palce_key_array=[]
+    horse_id_and_place_key_array=[]
     horse_distance_group_key_array=[]
-    horse_corse_distancerace_key_array=[]
+    horse_course_distancerace_key_array=[]
     horse_course_type_key_array=[]
     horse_turn_direction_key_array=[]
     horse_turf_course_type_array=[]
@@ -1042,7 +1043,7 @@ def make_summary_dict(export_csv_path,cursor):
     horse_course_type_distance_group_key_array=[]
     horse_place_course_type_key_array=[]
 
-    ruery_count=0
+    query_count=0
     
     #csvを読み込んで集約に必要な情報を取得する。一括の集約は作らず面倒でもcsv単位で集約する 
     with open(export_csv_path, mode="r", encoding="utf-8-sig", newline="") as f:
@@ -1052,9 +1053,13 @@ def make_summary_dict(export_csv_path,cursor):
             month=row["month"]
             day=row["day"]
 
-            year_array.append(int(year))
-            month_array.append(int(month))
-            day_array.append(int(day))
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+
+            ymd=str(year)+str(month)+str(day)
+            ymd_array.append(int(ymd))
 
             horse_id_array.append(int(row["horse_id"]))
             trainer_id_array.append(int(row["trainer_id"]))
@@ -1065,53 +1070,49 @@ def make_summary_dict(export_csv_path,cursor):
         jockey_id_array=list(set(jockey_id_array))
     
     print("クエリの作成開始")
-    horse_ruery_str=trainer_ruery_str=jockey_ruery_str="("
+    horse_query_str=trainer_query_str=jockey_query_str="("
 
-    max_year=max(year_array)
-    max_month=max(month_array)
-    max_day=max(day_array)
+    max_ymd=str(max(ymd_array))
 
-    str_ymd=str(max_year)+str(max_month)+str(max_day)
-
-    while len(horse_id_array)>=ruery_count:
-        if len(horse_id_array)==ruery_count:
-            horse_id=horse_id_array[ruery_count-1]
-            horse_ruery_str=horse_ruery_str+"horse_id="+str(horse_id)+") and year*10000+month*100+day <="+str_ymd+";"
-        elif len(horse_id_array)>ruery_count:
-            horse_id=horse_id_array[ruery_count]
-            horse_ruery_str=horse_ruery_str+"horse_id="+str(horse_id)+" or "
-        ruery_count=ruery_count+1
+    while len(horse_id_array)>=query_count:
+        if len(horse_id_array)==query_count:
+            horse_id=horse_id_array[query_count-1]
+            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+") and year*10000+month*100+day <="+max_ymd+";"
+        elif len(horse_id_array)>query_count:
+            horse_id=horse_id_array[query_count]
+            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+" or "
+        query_count=query_count+1
     
-    ruery_count=0
-    while len(trainer_id_array)>=ruery_count:
-        if len(trainer_id_array)==ruery_count:
-            trainer_id=trainer_id_array[ruery_count-1]
-            trainer_ruery_str=trainer_ruery_str+"trainer_id="+str(trainer_id)+") and year*10000+month*100+day <="+str_ymd+";"
-        elif len(trainer_id_array)>ruery_count:
-            trainer_id=trainer_id_array[ruery_count]
-            trainer_ruery_str=trainer_ruery_str+"trainer_id="+str(trainer_id)+" or "
-        ruery_count=ruery_count+1
+    query_count=0
+    while len(trainer_id_array)>=query_count:
+        if len(trainer_id_array)==query_count:
+            trainer_id=trainer_id_array[query_count-1]
+            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+") and year*10000+month*100+day <="+max_ymd+";"
+        elif len(trainer_id_array)>query_count:
+            trainer_id=trainer_id_array[query_count]
+            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+" or "
+        query_count=query_count+1
     
-    ruery_count=0
-    while len(jockey_id_array)>=ruery_count:
-        if len(jockey_id_array)==ruery_count:
-            jockey_id=jockey_id_array[ruery_count-1]
-            jockey_ruery_str=jockey_ruery_str+"trainer_id="+str(trainer_id)+") and year*10000+month*100+day <="+str_ymd+";"
-        elif len(jockey_id_array)>ruery_count:
-            jockey_id=jockey_id_array[ruery_count]
-            jockey_ruery_str=jockey_ruery_str+"jockey_id="+str(jockey_id)+" or "
-        ruery_count=ruery_count+1
+    query_count=0
+    while len(jockey_id_array)>=query_count:
+        if len(jockey_id_array)==query_count:
+            jockey_id=jockey_id_array[query_count-1]
+            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+") and year*10000+month*100+day <="+max_ymd+";"
+        elif len(jockey_id_array)>query_count:
+            jockey_id=jockey_id_array[query_count]
+            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+" or "
+        query_count=query_count+1
 
-    horse_ummary_ruery="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,place,distance_group,course_distance,course_type,turn_direction,race_rank,turf_course_type,turf_condition,dirt_condition,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+horse_ruery_str 
-    cursor.execute(horse_ummary_ruery)
+    horse_summary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,place,distance_group,course_distance,course_type,turn_direction,race_rank,turf_course_type,turf_condition,dirt_condition,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+horse_query_str 
+    cursor.execute(horse_summary_query)
     horse_summary_result_array = cursor.fetchall()
 
-    trainer_ummary_ruery="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+trainer_ruery_str 
-    cursor.execute(trainer_ummary_ruery)
+    trainer_summary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+trainer_query_str 
+    cursor.execute(trainer_summary_query)
     trainer_summary_result_array = cursor.fetchall()
 
-    jockey_ummary_ruery="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+jockey_ruery_str 
-    cursor.execute(jockey_ummary_ruery)
+    jockey_summary_query="select race_id,horse_id,trainer_id,jockey_id,year,month,day,umaban,race_rank,race_time,race_ninki,last_3_furlong_time,last_3_furlong_rank,time_lag from race_result where "+jockey_query_str 
+    cursor.execute(jockey_summary_query)
     jockey_summary_result_array = cursor.fetchall()
 
     print("辞書の作成開始")
@@ -1120,7 +1121,7 @@ def make_summary_dict(export_csv_path,cursor):
         horse_id=row["horse_id"]
         place=row["place"]
         distance_group=row["distance_group"]    
-        corse_distancerace=row["course_distance"]
+        course_distancerace=row["course_distance"]
         course_type=row["course_type"]
         turn_direction=row["turn_direction"]
         turf_course_type=row["turf_course_type"]
@@ -1128,19 +1129,18 @@ def make_summary_dict(export_csv_path,cursor):
         dirt_condition=row["dirt_condition"]
 
         data_1={"year":row["year"],"month":row["month"],"day":row["day"],"race_id":row["race_id"],"umaban":row["umaban"],
-            "place":row["place"],"distance_group":row["distance_group"],"course_distance":row["course_distance"],"course_type":row["course_type"],"turn_direction":row["turn_direction"],turf_course_type:row["turf_course_type"],turf_condition:row["turf_condition"],dirt_condition:row["dirt_condition"],
+            "place":row["place"],"distance_group":row["distance_group"],"course_distance":row["course_distance"],"course_type":row["course_type"],"turn_direction":row["turn_direction"],"turf_course_type":row["turf_course_type"],"turf_condition":row["turf_condition"],"dirt_condition":row["dirt_condition"],
             "race_rank":row["race_rank"],"race_time":row["race_time"],"race_ninki":row["race_ninki"],"last_3_furlong_time":row["last_3_furlong_time"],"last_3_furlong_rank":row["last_3_furlong_rank"],"time_lag":row["time_lag"]}
 
         if horse_id not in horse_race_result_dict:
             horse_race_result_dict[horse_id] = []
         horse_race_result_dict[horse_id].append(data_1)
-        horse_id_array.append(horse_id)
 
-        horse_id_and_palce_key=(horse_id,place)
-        if horse_id_and_palce_key not in horse_id_palce_dict:
-            horse_id_palce_dict[horse_id_and_palce_key]=[]
-        horse_id_palce_dict[horse_id_and_palce_key].append(data_1)
-        horse_id_and_palce_key_array.append(horse_id_and_palce_key)
+        horse_id_and_place_key=(horse_id,place)
+        if horse_id_and_place_key not in horse_id_place_dict:
+            horse_id_place_dict[horse_id_and_place_key]=[]
+        horse_id_place_dict[horse_id_and_place_key].append(data_1)
+        horse_id_and_place_key_array.append(horse_id_and_place_key)
 
         horse_distance_group_key=(horse_id,distance_group)
         if horse_distance_group_key not in horse_distance_group_dict:
@@ -1148,11 +1148,11 @@ def make_summary_dict(export_csv_path,cursor):
         horse_distance_group_dict[horse_distance_group_key].append(data_1)
         horse_distance_group_key_array.append(horse_distance_group_key)
 
-        horse_corse_distance_key=(horse_id,corse_distancerace)
-        if horse_corse_distance_key not in horse_corse_distancerace_dict:
-            horse_corse_distancerace_dict[horse_corse_distance_key]=[]
-        horse_corse_distancerace_dict[horse_corse_distance_key].append(data_1)
-        horse_corse_distancerace_key_array.append(horse_corse_distance_key)        
+        horse_course_distance_key=(horse_id,course_distancerace)
+        if horse_course_distance_key not in horse_course_distancerace_dict:
+            horse_course_distancerace_dict[horse_course_distance_key]=[]
+        horse_course_distancerace_dict[horse_course_distance_key].append(data_1)
+        horse_course_distancerace_key_array.append(horse_course_distance_key)        
 
         horse_course_type_key=(horse_id,course_type)
         if horse_course_type_key not in horse_course_type_dict:
@@ -1202,9 +1202,9 @@ def make_summary_dict(export_csv_path,cursor):
         horse_place_course_type_dict[horse_place_course_type_key].append(data_1)
         horse_place_course_type_key_array.append(horse_place_course_type_key)
 
-    horse_id_and_palce_key_array = list(dict.fromkeys(horse_id_and_palce_key_array))
+    horse_id_and_place_key_array = list(dict.fromkeys(horse_id_and_place_key_array))
     horse_distance_group_key_array = list(dict.fromkeys(horse_distance_group_key_array))
-    horse_corse_distancerace_key_array = list(dict.fromkeys(horse_corse_distancerace_key_array))
+    horse_course_distancerace_key_array = list(dict.fromkeys(horse_course_distancerace_key_array))
     horse_course_type_key_array = list(dict.fromkeys(horse_course_type_key_array))
     horse_turn_direction_key_array = list(dict.fromkeys(horse_turn_direction_key_array))
     horse_turf_course_type_array = list(dict.fromkeys(horse_turf_course_type_array))
@@ -1213,7 +1213,6 @@ def make_summary_dict(export_csv_path,cursor):
     horse_dirt_condition_key_array = list(dict.fromkeys(horse_dirt_condition_key_array))
     horse_course_type_distance_group_key_array = list(dict.fromkeys(horse_course_type_distance_group_key_array))
     horse_place_course_type_key_array = list(dict.fromkeys(horse_place_course_type_key_array))
-
 
     for row in trainer_summary_result_array:
         trainer_id=row["trainer_id"]       
@@ -1233,10 +1232,9 @@ def make_summary_dict(export_csv_path,cursor):
 
     print("horse辞書の作成完了")
 
-    return horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_palce_dict,horse_distance_group_dict,horse_corse_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_palce_key_array,horse_distance_group_key_array,horse_corse_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
+    return horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
 
-    
-def horse_summary(horse_race_result_dict,horse_id_array,now):
+def horse_summary(horse_race_result_dict,horse_id_array):
     print("集約の値の算出開始")
     summary_count=0
     horse_close_run_array=[]
@@ -1255,10 +1253,18 @@ def horse_summary(horse_race_result_dict,horse_id_array,now):
         for target_index, r in enumerate(target_array_origin):
             race_id=r["race_id"]
             umaban=r["umaban"]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
             
             #テスト用パラメーター
             #horse_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
@@ -1608,7 +1614,7 @@ def horse_summary(horse_race_result_dict,horse_id_array,now):
     print("馬の集計完了")
     return horse_summary_array,insert_flag
         
-def trainer_summary(trainer_race_result_dict,trainer_id_array,now):
+def trainer_summary(trainer_race_result_dict,trainer_id_array):
     print("集約の値の算出開始")
     summary_count=0
     trainer_close_run_array=[]
@@ -1627,10 +1633,17 @@ def trainer_summary(trainer_race_result_dict,trainer_id_array,now):
         for target_index, r in enumerate(target_array_origin):
             race_id=r["race_id"]
             umaban=r["umaban"]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
             
             #テスト用パラメーター
             #trainer_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
@@ -1952,7 +1965,7 @@ def trainer_summary(trainer_race_result_dict,trainer_id_array,now):
     insert_flag=2
     return target_array,insert_flag
 
-def jockey_summary(jockey_race_result_dict,jockey_id_array,now):
+def jockey_summary(jockey_race_result_dict,jockey_id_array):
     print("集約の値の算出開始")
     summary_count=0
     jockey_close_run_array=[]
@@ -1971,10 +1984,17 @@ def jockey_summary(jockey_race_result_dict,jockey_id_array,now):
         for target_index, r in enumerate(target_array_origin):
             race_id=r["race_id"]
             umaban=r["umaban"]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
             
             #テスト用パラメーター
             #jockey_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
@@ -2296,22 +2316,29 @@ def jockey_summary(jockey_race_result_dict,jockey_id_array,now):
     print("騎手の集計完了")
     return target_array,insert_flag
 
-def horse_place_summary(horse_id_palce_dict,horse_id_and_palce_key_array):
+def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
     summary_count=0
     horse_place_summary_array=[]
-    while len(horse_id_and_palce_key_array)>summary_count:
-        key=horse_id_and_palce_key_array[summary_count]
-        target_array_origin=horse_id_palce_dict[key]
+    while len(horse_id_and_place_key_array)>summary_count:
+        key=horse_id_and_place_key_array[summary_count]
+        target_array_origin=horse_id_place_dict[key]
 
         #処理しやすいように降順でソートする
         target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             place=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2387,10 +2414,17 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             distance_group=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2454,22 +2488,29 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
     print("馬と距離グループの集計完了")
     return target_array,insert_flag
 
-def horse_course_distance_summary(horse_corse_distancerace_dict,horse_corse_distancerace_key_array):
+def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array):
     summary_count=0
     horse_course_distance_array=[]
-    while len(horse_corse_distancerace_key_array)>summary_count:
-        key=horse_corse_distancerace_key_array[summary_count]
-        target_array_origin=horse_corse_distancerace_dict[key]
+    while len(horse_course_distancerace_key_array)>summary_count:
+        key=horse_course_distancerace_key_array[summary_count]
+        target_array_origin=horse_course_distancerace_dict[key]
 
         #処理しやすいように降順でソートする
         target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
-            corse_distance=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            course_distance=key[1]
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2522,7 +2563,7 @@ def horse_course_distance_summary(horse_corse_distancerace_dict,horse_corse_dist
             cal_result=cal_rate_and_ave(target_count,race_count)
             better_than_ninki_rate=cal_result
 
-            data=[horse_id,summary_day,corse_distance,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
+            data=[horse_id,summary_day,course_distance,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
                     avg_rank,avg_time_lag,avg_ninki,avg_rank_minus_ninki,better_than_ninki_rate]
             horse_course_distance_array.append(data)
 
@@ -2544,11 +2585,18 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
         target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
-            corse_type=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            course_type=key[1]
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2601,7 +2649,7 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
             cal_result=cal_rate_and_ave(target_count,race_count)
             better_than_ninki_rate=cal_result
 
-            data=[horse_id,summary_day,corse_type,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
+            data=[horse_id,summary_day,course_type,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
                     avg_rank,avg_time_lag,avg_ninki,avg_rank_minus_ninki,better_than_ninki_rate]
             horse_course_type_array.append(data)
 
@@ -2624,10 +2672,17 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             turn_direction=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2703,10 +2758,17 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             turn_course_type=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2782,10 +2844,17 @@ def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             turf_condition=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2863,10 +2932,17 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             dirt_condition=key[1]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2945,10 +3021,17 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
             horse_id=key[0]
             place=key[1]
             distance_group=key[2]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3023,12 +3106,19 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
         target_array_origin.sort(key=lambda x: (int(x["year"]),int(x["month"]),int(x["day"])),reverse=True)
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
-            place=key[1]
+            course_type=key[1]
             distance_group=key[2]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3081,7 +3171,7 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
             cal_result=cal_rate_and_ave(target_count,race_count)
             better_than_ninki_rate=cal_result
 
-            data=[horse_id,summary_day,place,distance_group,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
+            data=[horse_id,summary_day,course_type,distance_group,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
                     avg_rank,avg_time_lag,avg_ninki,avg_rank_minus_ninki,better_than_ninki_rate]
             horse_course_type_distance_group.append(data)
 
@@ -3104,11 +3194,18 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
         for target_index, r in enumerate(target_array_origin):
             horse_id=key[0]
             place=key[1]
-            distance_group=key[2]
-            summary_day=str(r["year"])+str(r["month"])+str(r["day"])
+            course_type=key[2]
+            year=r["year"]
+            month=r["month"]
+            day=r["day"]
+            if len(str(month))==1:
+                month="0"+str(month)
+            if len(str(day))==1:
+                day="0"+str(day)
+            summary_day=str(year)+str(month)+str(day)
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index:]
+            target_array = target_array_origin[target_index :]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3161,7 +3258,7 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
             cal_result=cal_rate_and_ave(target_count,race_count)
             better_than_ninki_rate=cal_result
 
-            data=[horse_id,summary_day,place,distance_group,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
+            data=[horse_id,summary_day,place,course_type,race_count,win_count,top2_count,top3_count,win_rate,top2_rate,top3_rate,
                     avg_rank,avg_time_lag,avg_ninki,avg_rank_minus_ninki,better_than_ninki_rate]
             horse_place_course_type.append(data)
 
@@ -3210,7 +3307,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_place_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3218,7 +3315,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_distance_group_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3226,7 +3323,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_course_distance_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3234,7 +3331,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_course_type_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3242,7 +3339,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_turn_direction_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3250,7 +3347,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_turf_course_type_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3258,7 +3355,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_turf_condition_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3266,7 +3363,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_dirt_condition_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3274,7 +3371,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_place_distance_group_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3282,7 +3379,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_course_type_distance_group_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
@@ -3290,7 +3387,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
         while len(target_array)>0:
             insert_target=target_array[:1000]
             insert_srl="insert into horse_place_course_type_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            cursor.executemany(insert_srl, target_array)
+            cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
 
