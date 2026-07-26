@@ -26,9 +26,6 @@ from time import sleep
 def main():
     today=date.today()
     now = today.strftime("%Y%m%d")
-    today_year =today.year
-    today_month=today.month
-    today_day=today.day
     print("時刻の取得完了")
     conn,cursor=connect_mysrl()
     make_dir()
@@ -42,8 +39,8 @@ def main():
     print("フォルダ内の初期のファイル名の取得完了")
 
     #mysrlのdump（バックアップを取得処理を追加する)
-    # print("mysrlのdump開始")
-    # dump_mysrl()
+    print("mysrlのdump開始")
+    dump_mysrl()
 
     while len(race_result_filenam_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -60,121 +57,120 @@ def main():
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         
-        # #修正項目の確認要請メールを送る処理
-        # if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
-        #     sent_mail(sent_mail_stop_array,sent_mail_double_array)
-        # print("race_resultのインサート開始")
-        # insert_race_result(from_dict_to_converted_array,conn,cursor)
+        #修正項目の確認要請メールを送る処理
+        if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
+            sent_mail(sent_mail_stop_array,sent_mail_double_array)
+        print("race_resultのインサート開始")
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
         
         #データの集約
         print("データの集計を開始します。")
         horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_palce_dict,horse_distance_group_dict,horse_corse_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_palce_key_array,horse_distance_group_key_array,horse_corse_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
-        # target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,now)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=trainer_summary(trainer_race_result_dict,trainer_id_array,now)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=jockey_summary(jockey_race_result_dict,jockey_id_array,now)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_place_summary(horse_id_palce_dict,horse_id_and_palce_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_course_distance_summary(horse_corse_distancerace_dict,horse_corse_distancerace_key_array) 
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-        # target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
-
+        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,now)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=trainer_summary(trainer_race_result_dict,trainer_id_array,now)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=jockey_summary(jockey_race_result_dict,jockey_id_array,now)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_place_summary(horse_id_palce_dict,horse_id_and_palce_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_course_distance_summary(horse_corse_distancerace_dict,horse_corse_distancerace_key_array) 
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
         print("データの集約とインサート完了")
 
-    #     #この処理は必ず最後に置く
-    #     fixed_flag=0
-    #     move_file(target_file_path,move_filename)
-    #     race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
+        #この処理は必ず最後に置く
+        fixed_flag=0
+        move_file(target_file_path,move_filename)
+        race_result_filenam_array=race_result_get_filename(insert_race_result_csv_dir)
         
-    # while len(horse_array)!=0:
-    #     #馬情報の処理
-    #     target_file=horse_array[0]
-    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
-    #     print("馬情報のインサート開始")
-    #     insert_horse(target_file_path,conn,cursor,now)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     horse_array=horsde_get_filename(insert_horse_csv_dir)
+    while len(horse_array)!=0:
+        #馬情報の処理
+        target_file=horse_array[0]
+        target_file_path=insert_horse_csv_dir+"\\"+target_file
+        print("馬情報のインサート開始")
+        insert_horse(target_file_path,conn,cursor,now)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        horse_array=horsde_get_filename(insert_horse_csv_dir)
 
-    # while len(odds_array)!=0:
-    #     #オッズ情報の処理
-    #     target_file=odds_array[0]
-    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
-    #     print("オッズ情報のインサート開始")
-    #     insert_odds(target_file_path,target_file,conn,cursor)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     odds_array=odds_get_filename(insert_odds_csv_dir)
+    while len(odds_array)!=0:
+        #オッズ情報の処理
+        target_file=odds_array[0]
+        target_file_path=insert_odds_csv_dir+"\\"+target_file
+        print("オッズ情報のインサート開始")
+        insert_odds(target_file_path,target_file,conn,cursor)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        odds_array=odds_get_filename(insert_odds_csv_dir)
 
-    # #trainer_infoの処理
-    # insert_array,updata_array=make_trainer_data(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのインサート処理開始")
-    #     insert_trainer_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのアップデート処理開始")
-    #     updata_trainer_info(updata_array,conn,cursor)
+    #trainer_infoの処理
+    insert_array,updata_array=make_trainer_data(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのインサート処理開始")
+        insert_trainer_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのアップデート処理開始")
+        updata_trainer_info(updata_array,conn,cursor)
 
-    # #jockey_infoの処理
-    # insert_array,updata_array=make_jockey_info(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのインサート処理開始")
-    #     insert_jockey_info(insert_array,conn,cursor)
-    # elif len(updata_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=updata_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_updata_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのアップデート処理開始")
-    #     updata_jockey_info(updata_array,conn,cursor)
+    #jockey_infoの処理
+    insert_array,updata_array=make_jockey_info(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのインサート処理開始")
+        insert_jockey_info(insert_array,conn,cursor)
+    elif len(updata_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=updata_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_updata_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのアップデート処理開始")
+        updata_jockey_info(updata_array,conn,cursor)
 
-    # #すべてのcsvをファイルサーバーに移動する
-    # #windowsからファイルサーバーにおくる方式に変更する
-    # export_csv_to_fileserver()
+    #すべてのcsvをファイルサーバーに移動する
+    #windowsからファイルサーバーにおくる方式に変更する
+    export_csv_to_fileserver()
 
-    # #googledriveにアプロードするスクリプトの記述
-    # print("クラウドにバックアップ開始")
-    # upload_cloud()
-    # print("クラウドにバックアップ終了")
+    #googledriveにアプロードするスクリプトの記述
+    print("クラウドにバックアップ開始")
+    upload_cloud()
+    print("クラウドにバックアップ終了")
     
-    # #windowsのローカルファイルを削除する
-    # delete_sorce_file()
-    # print("すべての処理完了！！")
+    #windowsのローカルファイルを削除する
+    delete_sorce_file()
+    print("すべての処理完了！！")
 
 
 def connect_mysrl():
@@ -3175,18 +3171,6 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
     target_array=horse_place_course_type
     print("馬と競馬場とコースタイプの集計完了")
     return target_array,insert_flag
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 def cal_rate_and_ave(target_count,race_count):
     if race_count==0:
@@ -3311,14 +3295,5 @@ def summary_insert(conn,cursor,target_array,insert_flag):
             del target_array[:len(insert_target)]
 
     print("インサート処理が完了しました")
-
-
-
-
-
-
-
-
-
 
 main()
