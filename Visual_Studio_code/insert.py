@@ -65,12 +65,12 @@ def main():
         
         #データの集約
         print("データの集計を開始します。")
-        race_day_dict,horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
+        trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
         # target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
         # summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array)
+        target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array)
+        target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array)
         summary_insert(conn,cursor,target_array,insert_flag)
@@ -1023,7 +1023,8 @@ def make_summary_dict(export_csv_path,cursor):
     horse_place_distance_group_dict={}
     horse_course_type_distance_group_dict={}
     horse_place_course_type_dict={}
-    race_day_dict={}
+    trainer_race_day_dict={}
+    jockey_race_day_dict={}
 
     horse_id_array=[]
     trainer_id_array=[]
@@ -1052,7 +1053,10 @@ def make_summary_dict(export_csv_path,cursor):
             year=row["year"]
             month=row["month"]
             day=row["day"]
+            race_id=row["race_id"]
             trainer_id=row["trainer_id"]
+            jockey_id=row["jockey_id"]
+            umaban=row["umaban"]
 
             if len(str(month))==1:
                 month="0"+str(month)
@@ -1061,9 +1065,13 @@ def make_summary_dict(export_csv_path,cursor):
             
             ymd=str(year)+str(month)+str(day)
             race_day_now=ymd
-            if trainer_id not in race_day_dict:
-                race_day_dict[trainer_id]=set()
-            race_day_dict[trainer_id].add(race_day_now)
+            if trainer_id not in trainer_race_day_dict:
+                trainer_race_day_dict[trainer_id]=set()
+            trainer_race_day_dict[trainer_id].add((race_day_now,race_id,umaban))
+
+            if jockey_id not in jockey_race_day_dict:
+                jockey_race_day_dict[jockey_id]=set()
+            jockey_race_day_dict[jockey_id].add((race_day_now,race_id,umaban))
 
             ymd_array.append(int(ymd))
             horse_id_array.append(int(row["horse_id"]))
@@ -1131,6 +1139,7 @@ def make_summary_dict(export_csv_path,cursor):
         turf_course_type=row["turf_course_type"]
         turf_condition=row["turf_condition"]
         dirt_condition=row["dirt_condition"]
+        time_lag=row["time_lag"]
 
         data_1={"year":row["year"],"month":row["month"],"day":row["day"],"race_id":row["race_id"],"umaban":row["umaban"],
             "place":row["place"],"distance_group":row["distance_group"],"course_distance":row["course_distance"],"course_type":row["course_type"],"turn_direction":row["turn_direction"],"turf_course_type":row["turf_course_type"],"turf_condition":row["turf_condition"],"dirt_condition":row["dirt_condition"],
@@ -1258,7 +1267,7 @@ def make_summary_dict(export_csv_path,cursor):
 
     print("horse辞書の作成完了")
 
-    return race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_summary_key_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
+    return trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_summary_key_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
 
 def horse_summary(horse_race_result_dict,horse_id_array):
     print("集約の値の算出開始")
@@ -1300,7 +1309,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_close5_run_array=horse_close_run_array[:5].copy()
             horse_5run_race_count=len(horse_close5_run_array)
             horse_close10_run_array=horse_close_run_array[:10].copy()
-            horse_10run_race_count=len(horse_close10_run_array)
+            horse_1m_race_count=len(horse_close10_run_array)
     
             #6か月の有効出走数を集計する
             #6か月前の日付を算出する
@@ -1329,7 +1338,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_5run_win_count=len(horse_close5_win1_array)
 
             horse_close10_win1_array=[r for r in horse_close10_run_array if int(r["race_rank"])==1]
-            horse_10run_win_count=len(horse_close10_win1_array)
+            horse_1m_win_count=len(horse_close10_win1_array)
 
             horse_close6month_win1_array=[r for r in month6_array if int(r["race_rank"])==1]
             horse_6m_win_count=len(horse_close6month_win1_array)
@@ -1342,7 +1351,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_5run_top2_count=len(horse_close5_rentai_array)
 
             horse_close10_rentai_array=[r for r in horse_close10_run_array if int(r["race_rank"])==1 or int(r["race_rank"])==2]
-            horse_10run_top2_count=len(horse_close10_rentai_array)
+            horse_1m_top2_count=len(horse_close10_rentai_array)
 
             horse_close6month_rentai_array=[r for r in month6_array if int(r["race_rank"])==1 or int(r["race_rank"])==2]
             horse_6m_top2_count=len(horse_close6month_rentai_array)
@@ -1355,7 +1364,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_5run_top3_count=len(horse_close5_fuku_array)
 
             horse_close10_fuku_array=[r for r in horse_close10_run_array if int(r["race_rank"])==1 or int(r["race_rank"])==2 or int(r["race_rank"])==3]
-            horse_10run_top3_count=len(horse_close10_fuku_array)
+            horse_1m_top3_count=len(horse_close10_fuku_array)
 
             horse_close6month_fuku_array=[r for r in month6_array if int(r["race_rank"])==1 or int(r["race_rank"])==2 or int(r["race_rank"])==3]
             horse_6m_top3_count=len(horse_close6month_fuku_array)
@@ -1369,10 +1378,10 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_win_rate=cal_result
 
-            target_count=horse_10run_win_count
-            race_count=horse_10run_race_count
+            target_count=horse_1m_win_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_win_rate=cal_result
+            horse_1m_win_rate=cal_result
 
             target_count=horse_6m_win_count
             race_count=horse_6m_race_count
@@ -1390,10 +1399,10 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_top2_rate=cal_result
 
-            target_count=horse_10run_top2_count
-            race_count=horse_10run_race_count
+            target_count=horse_1m_top2_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_top2_rate=cal_result
+            horse_1m_top2_rate=cal_result
 
             target_count=horse_6m_top2_count
             race_count=horse_6m_race_count
@@ -1411,10 +1420,10 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_top3_rate=cal_result
 
-            target_count=horse_10run_top3_count
-            race_count=horse_10run_race_count
+            target_count=horse_1m_top3_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_top3_rate=cal_result
+            horse_1m_top3_rate=cal_result
 
             target_count=horse_6m_top3_count
             race_count=horse_6m_race_count
@@ -1432,10 +1441,14 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             for e in horse_close5_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
                 ninki=int(e["race_ninki"])
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
+                
                 ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
                 rank_ninki_sum=(rank-ninki)+rank_ninki_sum
@@ -1474,13 +1487,17 @@ def horse_summary(horse_race_result_dict,horse_id_array):
 
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
 
-            for e in horse_close10_run_array:
+            for e in horse_close5_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
                 ninki=int(e["race_ninki"])
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
+                
                 ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
                 rank_ninki_sum=(rank-ninki)+rank_ninki_sum
@@ -1488,44 +1505,48 @@ def horse_summary(horse_race_result_dict,horse_id_array):
                     over_rank_count=over_rank_count+1
 
             target_count=rank_sum
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_avg_rank=cal_result
+            horse_1m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_avg_time_lag=cal_result
+            horse_1m_avg_time_lag=cal_result
 
             target_count=last_3_furlong_rank_sum
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_avg_last_3f_rank=cal_result
+            horse_1m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_avg_ninki=cal_result
+            horse_1m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_avg_rank_minus_ninki=cal_result
+            horse_1m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=horse_10run_race_count
+            race_count=horse_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            horse_10run_better_than_ninki_rate=cal_result
+            horse_1m_better_than_ninki_rate=cal_result
 
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
 
-            for e in month6_array:
+            for e in horse_close5_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
                 ninki=int(e["race_ninki"])
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
+                
                 ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
                 rank_ninki_sum=(rank-ninki)+rank_ninki_sum
@@ -1564,13 +1585,17 @@ def horse_summary(horse_race_result_dict,horse_id_array):
 
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
 
-            for e in month12_array:
+            for e in horse_close5_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
                 ninki=int(e["race_ninki"])
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
+                
                 ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
                 rank_ninki_sum=(rank-ninki)+rank_ninki_sum
@@ -1610,19 +1635,19 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
 
             data=[race_id,umaban,summary_day, horse_id,
-                horse_5run_race_count,horse_10run_race_count,horse_6m_race_count,horse_12m_race_count,
-                horse_5run_win_count,horse_10run_win_count,horse_6m_win_count,horse_12m_win_count,
-                horse_5run_top2_count,horse_10run_top2_count,horse_6m_top2_count,horse_12m_top2_count,
-                horse_5run_top3_count,horse_10run_top3_count,horse_6m_top3_count,horse_12m_top3_count,
-                horse_5run_win_rate,horse_10run_win_rate,horse_6m_win_rate,horse_12m_win_rate,
-                horse_5run_top2_rate,horse_10run_top2_rate,horse_6m_top2_rate,horse_12m_top2_rate,
-                horse_5run_top3_rate,horse_10run_top3_rate,horse_6m_top3_rate,horse_12m_top3_rate,
-                horse_5run_avg_rank,horse_10run_avg_rank,horse_6m_avg_rank,horse_12m_avg_rank,
-                horse_5run_avg_time_lag,horse_10run_avg_time_lag,horse_6m_avg_time_lag,horse_12m_avg_time_lag,
-                horse_5run_avg_last_3f_rank,horse_10run_avg_last_3f_rank,horse_6m_avg_last_3f_rank,horse_12m_avg_last_3f_rank,
-                horse_5run_avg_ninki,horse_10run_avg_ninki,horse_6m_avg_ninki,horse_12m_avg_ninki,           
-                horse_5run_avg_rank_minus_ninki,horse_10run_avg_rank_minus_ninki,horse_6m_avg_rank_minus_ninki,horse_12m_avg_rank_minus_ninki,
-                horse_5run_better_than_ninki_rate,horse_10run_better_than_ninki_rate,horse_6m_better_than_ninki_rate,horse_12m_better_than_ninki_rate]
+                horse_5run_race_count,horse_1m_race_count,horse_6m_race_count,horse_12m_race_count,
+                horse_5run_win_count,horse_1m_win_count,horse_6m_win_count,horse_12m_win_count,
+                horse_5run_top2_count,horse_1m_top2_count,horse_6m_top2_count,horse_12m_top2_count,
+                horse_5run_top3_count,horse_1m_top3_count,horse_6m_top3_count,horse_12m_top3_count,
+                horse_5run_win_rate,horse_1m_win_rate,horse_6m_win_rate,horse_12m_win_rate,
+                horse_5run_top2_rate,horse_1m_top2_rate,horse_6m_top2_rate,horse_12m_top2_rate,
+                horse_5run_top3_rate,horse_1m_top3_rate,horse_6m_top3_rate,horse_12m_top3_rate,
+                horse_5run_avg_rank,horse_1m_avg_rank,horse_6m_avg_rank,horse_12m_avg_rank,
+                horse_5run_avg_time_lag,horse_1m_avg_time_lag,horse_6m_avg_time_lag,horse_12m_avg_time_lag,
+                horse_5run_avg_last_3f_rank,horse_1m_avg_last_3f_rank,horse_6m_avg_last_3f_rank,horse_12m_avg_last_3f_rank,
+                horse_5run_avg_ninki,horse_1m_avg_ninki,horse_6m_avg_ninki,horse_12m_avg_ninki,           
+                horse_5run_avg_rank_minus_ninki,horse_1m_avg_rank_minus_ninki,horse_6m_avg_rank_minus_ninki,horse_12m_avg_rank_minus_ninki,
+                horse_5run_better_than_ninki_rate,horse_1m_better_than_ninki_rate,horse_6m_better_than_ninki_rate,horse_12m_better_than_ninki_rate]
             
             summary_key=(race_id,umaban)
             if summary_key in check_array:
@@ -1637,7 +1662,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
     print("馬の集計完了")
     return horse_summary_array,insert_flag
         
-def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
+def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_array):
     print("集約の値の算出開始")
     summary_count=0
     trainer_close_run_array=[]
@@ -1649,62 +1674,50 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
         print("trainer_summary"+str(summary_count)+"/"+str(len(trainer_id_array))+"の処理中です")
         trainer_id=trainer_id_array[summary_count]
         target_array_origin=trainer_race_result_dict[trainer_id]
+
         #処理しやすいように降順でソートする
         target_array_origin.sort(key=lambda x: (int(x["trainer_race_day"])),reverse=True)
-        
+
+        #race_dayを取り出して基準となるrace_dayを取り出す
+        trainer_race_day_list=list(trainer_race_day_dict[str(trainer_id)])
+
         #配列の中身と要素を取得する。
-        summary_day=target_array_origin[0]["trainer_race_day"]
-        for target_index, r in enumerate(target_array_origin):
-            race_id=r["race_id"]
-            umaban=r["umaban"]
-            year=r["year"]
-            month=r["month"]
-            day=r["day"]
-            
-            #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
-            
-            #テスト用パラメーター
-            #trainer_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
-            
+        for h ,race_id,umaban in trainer_race_day_list:
+            summary_day=h
+            #各日付を算出する
+            under_day_0=int(h)-100
+            under_day_1=int(h)-300
+            under_day_2=int(h)-600
+            under_day_3=int(h)-10000
+
             #rank0を取り除いて有効出走数を算出する
-            trainer_close_run_array=[r for r in target_array if int(r["rank"])!=0]
+            trainer_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
 
-            #race_dayを取り出して基準となるrace_dayを取り出す
-            race_day=race_day_dict[race_id]
+            #出走期間と出走数を抽出する
+            today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day]
+            trainer_today_race_count=len(today_array)
 
-            #当日の出走数を算出する
+            month1_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_0]
+            trainer_1m_race_count=len(month1_array)
 
+            month3_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_1]
+            trainer_3m_race_count=len(month3_array)
 
-            
-            #6か月の有効出走数を集計する
-            #6か月前の日付を算出する
-            before_6month=int(month)-6
-            if before_6month<=0:
-                before_6year=int(year)-1
-                before_6month=12+before_6month
-            else:
-                before_6year=int(year)
-
-            trainer_close6month_run_array=trainer_close_run_array.copy()
-            under_day_1=before_6year*10000+before_6month*100+day
-
-            month6_array=[s for s in trainer_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            month6_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_2]
             trainer_6m_race_count=len(month6_array)
 
-            trainer_close1year_run_array=trainer_close6month_run_array.copy()
-            before_12year=year-1
-
-            under_day_2=before_12year*10000+month*100+day
-            month12_array=[s for s in trainer_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            month12_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_3]
             trainer_12m_race_count=len(month12_array)
 
             #一着回数を算出する
-            trainer_close5_win1_array=[r for r in trainer_close5_run_array if int(r["rank"])==1]
-            trainer_5run_win_count=len(trainer_close5_win1_array)
+            trainer_today_win1_array=[r for r in today_array if int(r["rank"])==1]
+            trainer_today_win_count=len(trainer_today_win1_array)
 
-            trainer_close10_win1_array=[r for r in trainer_close10_run_array if int(r["rank"])==1]
-            trainer_10run_win_count=len(trainer_close10_win1_array)
+            trainer_close5_win1_array=[r for r in month1_array if int(r["rank"])==1]
+            trainer_1m_win_count=len(trainer_close5_win1_array)
+
+            trainer_close10_win1_array=[r for r in month3_array if int(r["rank"])==1]
+            trainer_3m_win_count=len(trainer_close10_win1_array)
 
             trainer_close6month_win1_array=[r for r in month6_array if int(r["rank"])==1]
             trainer_6m_win_count=len(trainer_close6month_win1_array)
@@ -1713,24 +1726,30 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             trainer_12m_win_count=len(trainer_close1year_win1_array)
 
             #連対回数を算出する
-            trainer_close5_rentai_array=[r for r in trainer_close5_run_array if int(r["rank"])==1 or int(r["rank"])==2]
-            trainer_5run_top2_count=len(trainer_close5_rentai_array)
-
-            trainer_close10_rentai_array=[r for r in trainer_close10_run_array if int(r["rank"])==1 or int(r["rank"])==2]
-            trainer_10run_top2_count=len(trainer_close10_rentai_array)
-
-            trainer_close6month_rentai_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2]
-            trainer_6m_top2_count=len(trainer_close6month_rentai_array)
+            trainer_tooday_rentai_array=[r for r in today_array if int(r["rank"])==1 or int(r["rank"])==2]
+            trainer_today_top2_count=len(trainer_tooday_rentai_array)
             
-            trainer_close1year_rentai_array=[r for r in month12_array if int(r["rank"])==1 or int(r["rank"])==2]
-            trainer_12m_top2_count=len(trainer_close1year_rentai_array)
+            trainer_1m_rentai_array=[r for r in month1_array if int(r["rank"])==1 or int(r["rank"])==2]
+            trainer_1m_top2_count=len(trainer_1m_rentai_array)
+
+            trainer_3m_rentai_array=[r for r in month3_array if int(r["rank"])==1 or int(r["rank"])==2]
+            trainer_3m_top2_count=len(trainer_3m_rentai_array)
+
+            trainer_6m_rentai_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2]
+            trainer_6m_top2_count=len(trainer_6m_rentai_array)
+            
+            trainer_12m_rentai_array=[r for r in month12_array if int(r["rank"])==1 or int(r["rank"])==2]
+            trainer_12m_top2_count=len(trainer_12m_rentai_array)
 
             #複勝を算出する
-            trainer_close5_fuku_array=[r for r in trainer_close5_run_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
-            trainer_5run_top3_count=len(trainer_close5_fuku_array)
+            trainer_tooday_rentai_array=[r for r in today_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            trainer_today_top3_count=len(trainer_tooday_rentai_array)
 
-            trainer_close10_fuku_array=[r for r in trainer_close10_run_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
-            trainer_10run_top3_count=len(trainer_close10_fuku_array)
+            trainer_close5_fuku_array=[r for r in month1_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            trainer_1m_top3_count=len(trainer_close5_fuku_array)
+
+            trainer_close10_fuku_array=[r for r in month3_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            trainer_3m_top3_count=len(trainer_close10_fuku_array)
 
             trainer_close6month_fuku_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
             trainer_6m_top3_count=len(trainer_close6month_fuku_array)
@@ -1739,15 +1758,20 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             trainer_12m_top3_count=len(trainer_close1year_fuku_array)
 
             #勝率を算出する
-            target_count=trainer_5run_win_count
-            race_count=trainer_5run_race_count
+            target_count=trainer_today_win_count
+            race_count=trainer_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_win_rate=cal_result
+            trainer_today_win_rate=cal_result
 
-            target_count=trainer_10run_win_count
-            race_count=trainer_10run_race_count
+            target_count=trainer_1m_win_count
+            race_count=trainer_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_win_rate=cal_result
+            trainer_1m_win_rate=cal_result
+
+            target_count=trainer_3m_win_count
+            race_count=trainer_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_win_rate=cal_result
 
             target_count=trainer_6m_win_count
             race_count=trainer_6m_race_count
@@ -1760,15 +1784,20 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             trainer_12m_win_rate=cal_result
 
             #連対率を算出する
-            target_count=trainer_5run_top2_count
-            race_count=trainer_5run_race_count
+            target_count=trainer_today_top2_count
+            race_count=trainer_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_top2_rate=cal_result
+            trainer_today_top2_rate=cal_result
 
-            target_count=trainer_10run_top2_count
-            race_count=trainer_10run_race_count
+            target_count=trainer_1m_top2_count
+            race_count=trainer_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_top2_rate=cal_result
+            trainer_1m_top2_rate=cal_result
+
+            target_count=trainer_3m_top2_count
+            race_count=trainer_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_top2_rate=cal_result
 
             target_count=trainer_6m_top2_count
             race_count=trainer_6m_race_count
@@ -1781,15 +1810,20 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             trainer_12m_top2_rate=cal_result
 
             #複勝率を算出する
-            target_count=trainer_5run_top3_count
-            race_count=trainer_5run_race_count
+            target_count=trainer_today_top3_count
+            race_count=trainer_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_top3_rate=cal_result
+            trainer_today_top3_rate=cal_result
 
-            target_count=trainer_10run_top3_count
-            race_count=trainer_10run_race_count
+            target_count=trainer_1m_top3_count
+            race_count=trainer_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_top3_rate=cal_result
+            trainer_1m_top3_rate=cal_result
+
+            target_count=trainer_3m_top3_count
+            race_count=trainer_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_top3_rate=cal_result
 
             target_count=trainer_6m_top3_count
             race_count=trainer_6m_race_count
@@ -1802,173 +1836,251 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             trainer_12m_top3_rate=cal_result
 
             #その他の項目を算出する
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            for e in trainer_close5_run_array:
-                rank=int(e["rank"])
+            for e in today_array:
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
-            race_count=trainer_5run_race_count
+            race_count=trainer_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_avg_rank=cal_result
+            trainer_today_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=trainer_5run_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_avg_time_lag=cal_result
+            trainer_today_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=trainer_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_avg_ninki=cal_result
+            trainer_today_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=trainer_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_avg_rank_minus_ninki=cal_result
+            trainer_today_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=trainer_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_5run_better_than_ninki_rate=cal_result
+            trainer_today_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
-            for e in trainer_close10_run_array:
-                rank=int(e["rank"])
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+           
+            for e in month1_array:
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
-            race_count=trainer_10run_race_count
+            race_count=trainer_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_avg_rank=cal_result
+            trainer_1m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=trainer_10run_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_avg_time_lag=cal_result
+            trainer_1m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=trainer_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_avg_ninki=cal_result
+            trainer_1m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=trainer_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_avg_rank_minus_ninki=cal_result
+            trainer_1m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=trainer_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            trainer_10run_better_than_ninki_rate=cal_result
+            trainer_1m_better_than_ninki_rate=cal_result
+            
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+            for e in month3_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
+            target_count=rank_sum
+            race_count=trainer_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=time_lag_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month6_array:
-                rank=int(e["rank"])
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
             race_count=trainer_6m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=trainer_6m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=trainer_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=trainer_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=trainer_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+            
             for e in month12_array:
-                rank=int(e["rank"])
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
             race_count=trainer_12m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=trainer_12m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=trainer_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=trainer_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=trainer_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+        
             data=[race_id,umaban,summary_day, trainer_id,
-                trainer_5run_race_count,trainer_10run_race_count,trainer_6m_race_count,trainer_12m_race_count,
-                trainer_5run_win_count,trainer_10run_win_count,trainer_6m_win_count,trainer_12m_win_count,
-                trainer_5run_top2_count,trainer_10run_top2_count,trainer_6m_top2_count,trainer_12m_top2_count,
-                trainer_5run_top3_count,trainer_10run_top3_count,trainer_6m_top3_count,trainer_12m_top3_count,
-                trainer_5run_win_rate,trainer_10run_win_rate,trainer_6m_win_rate,trainer_12m_win_rate,
-                trainer_5run_top2_rate,trainer_10run_top2_rate,trainer_6m_top2_rate,trainer_12m_top2_rate,
-                trainer_5run_top3_rate,trainer_10run_top3_rate,trainer_6m_top3_rate,trainer_12m_top3_rate,
-                trainer_5run_avg_rank,trainer_10run_avg_rank,trainer_6m_avg_rank,trainer_12m_avg_rank,
-                trainer_5run_avg_time_lag,trainer_10run_avg_time_lag,trainer_6m_avg_time_lag,trainer_12m_avg_time_lag,
-                trainer_5run_avg_ninki,trainer_10run_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
-                trainer_5run_avg_rank_minus_ninki,trainer_10run_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
-                trainer_5run_better_than_ninki_rate,trainer_10run_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
+                trainer_today_race_count,trainer_1m_race_count,trainer_3m_race_count,trainer_6m_race_count,trainer_12m_race_count,
+                trainer_today_win_count,trainer_1m_win_count,trainer_3m_win_count,trainer_6m_win_count,trainer_12m_win_count,
+                trainer_today_top2_count,trainer_1m_top2_count,trainer_3m_top2_count,trainer_6m_top2_count,trainer_12m_top2_count,
+                trainer_today_top3_count,trainer_1m_top3_count,trainer_3m_top3_count,trainer_6m_top3_count,trainer_12m_top3_count,
+                trainer_today_win_rate,trainer_1m_win_rate,trainer_3m_win_rate,trainer_6m_win_rate,trainer_12m_win_rate,
+                trainer_today_top2_rate,trainer_1m_top2_rate,trainer_3m_top2_rate,trainer_6m_top2_rate,trainer_12m_top2_rate,
+                trainer_today_top3_rate,trainer_1m_top3_rate,trainer_3m_top3_rate,trainer_6m_top3_rate,trainer_12m_top3_rate,
+                trainer_today_avg_rank,trainer_1m_avg_rank,trainer_3m_avg_rank,trainer_6m_avg_rank,trainer_12m_avg_rank,
+                trainer_today_avg_time_lag,trainer_1m_avg_time_lag,trainer_3m_avg_time_lag,trainer_6m_avg_time_lag,trainer_12m_avg_time_lag,
+                trainer_today_avg_ninki,trainer_1m_avg_ninki,trainer_3m_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
+                trainer_today_avg_rank_minus_ninki,trainer_1m_avg_rank_minus_ninki,trainer_3m_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
+                trainer_today_better_than_ninki_rate,trainer_1m_better_than_ninki_rate,trainer_3m_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
             
             summary_key=(race_id,umaban)
             if summary_key in check_array:
@@ -1977,14 +2089,15 @@ def trainer_summary(race_day_dict,trainer_race_result_dict,trainer_id_array):
             else:
                 trainer_summary_array.append(data)
                 check_array.add(summary_key)
-            
+
         summary_count=summary_count+1
+
     print("調教師の集計完了")
     target_array=trainer_summary_array
     insert_flag=2
     return target_array,insert_flag
 
-def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
+def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array):
     print("集約の値の算出開始")
     summary_count=0
     jockey_close_run_array=[]
@@ -1996,59 +2109,50 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
         print("jockey_summary"+str(summary_count)+"/"+str(len(jockey_id_array))+"の処理中です")
         jockey_id=jockey_id_array[summary_count]
         target_array_origin=jockey_race_result_dict[jockey_id]
+
         #処理しやすいように降順でソートする
         target_array_origin.sort(key=lambda x: (int(x["jockey_race_day"])),reverse=True)
-        
+
+        #race_dayを取り出して基準となるrace_dayを取り出す
+        jockey_race_day_list=list(jockey_race_day_dict[str(jockey_id)])
+
         #配列の中身と要素を取得する。
-        for target_index, r in enumerate(target_array_origin):
-            race_id=r["race_id"]
-            umaban=r["umaban"]
-            summary_day=""
+        for h ,race_id,umaban in jockey_race_day_list:
+            summary_day=h
+            #各日付を算出する
+            under_day_0=int(h)-100
+            under_day_1=int(h)-300
+            under_day_2=int(h)-600
+            under_day_3=int(h)-10000
 
-            #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
-            
-            #テスト用パラメーター
-            #jockey_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
-            
             #rank0を取り除いて有効出走数を算出する
-            jockey_close_run_array=[r for r in target_array if int(r["rank"])!=0]
-            jockey_close5_run_array=jockey_close_run_array[:5].copy()
-            jockey_5run_race_count=len(jockey_close5_run_array)
-            jockey_close10_run_array=jockey_close_run_array[:10].copy()
-            jockey_10run_race_count=len(jockey_close10_run_array)
-    
-            #6か月の有効出走数を集計する
-            #6か月前の日付を算出する
-            year=int(r["year"])
-            month=int(r["month"])
-            day=int(r["day"])
-            before_6month=month-6
-            if before_6month<=0:
-                before_6year=year-1
-                before_6month=12+before_6month
-            else:
-                before_6year=year
+            jockey_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
 
-            jockey_close6month_run_array=jockey_close_run_array.copy()
-            under_day_1=before_6year*10000+before_6month*100+day
+            #出走期間と出走数を抽出する
+            today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==summary_day]
+            jockey_today_race_count=len(today_array)
 
-            month6_array=[s for s in jockey_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            month1_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_0]
+            jockey_1m_race_count=len(month1_array)
+
+            month3_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_1]
+            jockey_3m_race_count=len(month3_array)
+
+            month6_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_2]
             jockey_6m_race_count=len(month6_array)
 
-            jockey_close1year_run_array=jockey_close6month_run_array.copy()
-            before_12year=year-1
-
-            under_day_2=before_12year*10000+month*100+day
-            month12_array=[s for s in jockey_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            month12_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_3]
             jockey_12m_race_count=len(month12_array)
 
             #一着回数を算出する
-            jockey_close5_win1_array=[r for r in jockey_close5_run_array if int(r["rank"])==1]
-            jockey_5run_win_count=len(jockey_close5_win1_array)
+            jockey_today_win1_array=[r for r in today_array if int(r["rank"])==1]
+            jockey_today_win_count=len(jockey_today_win1_array)
 
-            jockey_close10_win1_array=[r for r in jockey_close10_run_array if int(r["rank"])==1]
-            jockey_10run_win_count=len(jockey_close10_win1_array)
+            jockey_close5_win1_array=[r for r in month1_array if int(r["rank"])==1]
+            jockey_1m_win_count=len(jockey_close5_win1_array)
+
+            jockey_close10_win1_array=[r for r in month3_array if int(r["rank"])==1]
+            jockey_3m_win_count=len(jockey_close10_win1_array)
 
             jockey_close6month_win1_array=[r for r in month6_array if int(r["rank"])==1]
             jockey_6m_win_count=len(jockey_close6month_win1_array)
@@ -2057,24 +2161,30 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             jockey_12m_win_count=len(jockey_close1year_win1_array)
 
             #連対回数を算出する
-            jockey_close5_rentai_array=[r for r in jockey_close5_run_array if int(r["rank"])==1 or int(r["rank"])==2]
-            jockey_5run_top2_count=len(jockey_close5_rentai_array)
-
-            jockey_close10_rentai_array=[r for r in jockey_close10_run_array if int(r["rank"])==1 or int(r["rank"])==2]
-            jockey_10run_top2_count=len(jockey_close10_rentai_array)
-
-            jockey_close6month_rentai_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2]
-            jockey_6m_top2_count=len(jockey_close6month_rentai_array)
+            jockey_tooday_rentai_array=[r for r in today_array if int(r["rank"])==1 or int(r["rank"])==2]
+            jockey_today_top2_count=len(jockey_tooday_rentai_array)
             
-            jockey_close1year_rentai_array=[r for r in month12_array if int(r["rank"])==1 or int(r["rank"])==2]
-            jockey_12m_top2_count=len(jockey_close1year_rentai_array)
+            jockey_1m_rentai_array=[r for r in month1_array if int(r["rank"])==1 or int(r["rank"])==2]
+            jockey_1m_top2_count=len(jockey_1m_rentai_array)
+
+            jockey_3m_rentai_array=[r for r in month3_array if int(r["rank"])==1 or int(r["rank"])==2]
+            jockey_3m_top2_count=len(jockey_3m_rentai_array)
+
+            jockey_6m_rentai_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2]
+            jockey_6m_top2_count=len(jockey_6m_rentai_array)
+            
+            jockey_12m_rentai_array=[r for r in month12_array if int(r["rank"])==1 or int(r["rank"])==2]
+            jockey_12m_top2_count=len(jockey_12m_rentai_array)
 
             #複勝を算出する
-            jockey_close5_fuku_array=[r for r in jockey_close5_run_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
-            jockey_5run_top3_count=len(jockey_close5_fuku_array)
+            jockey_tooday_rentai_array=[r for r in today_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            jockey_today_top3_count=len(jockey_tooday_rentai_array)
 
-            jockey_close10_fuku_array=[r for r in jockey_close10_run_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
-            jockey_10run_top3_count=len(jockey_close10_fuku_array)
+            jockey_close5_fuku_array=[r for r in month1_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            jockey_1m_top3_count=len(jockey_close5_fuku_array)
+
+            jockey_close10_fuku_array=[r for r in month3_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
+            jockey_3m_top3_count=len(jockey_close10_fuku_array)
 
             jockey_close6month_fuku_array=[r for r in month6_array if int(r["rank"])==1 or int(r["rank"])==2 or int(r["rank"])==3]
             jockey_6m_top3_count=len(jockey_close6month_fuku_array)
@@ -2083,15 +2193,20 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             jockey_12m_top3_count=len(jockey_close1year_fuku_array)
 
             #勝率を算出する
-            target_count=jockey_5run_win_count
-            race_count=jockey_5run_race_count
+            target_count=jockey_today_win_count
+            race_count=jockey_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_win_rate=cal_result
+            jockey_today_win_rate=cal_result
 
-            target_count=jockey_10run_win_count
-            race_count=jockey_10run_race_count
+            target_count=jockey_1m_win_count
+            race_count=jockey_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_win_rate=cal_result
+            jockey_1m_win_rate=cal_result
+
+            target_count=jockey_3m_win_count
+            race_count=jockey_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_win_rate=cal_result
 
             target_count=jockey_6m_win_count
             race_count=jockey_6m_race_count
@@ -2104,15 +2219,20 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             jockey_12m_win_rate=cal_result
 
             #連対率を算出する
-            target_count=jockey_5run_top2_count
-            race_count=jockey_5run_race_count
+            target_count=jockey_today_top2_count
+            race_count=jockey_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_top2_rate=cal_result
+            jockey_today_top2_rate=cal_result
 
-            target_count=jockey_10run_top2_count
-            race_count=jockey_10run_race_count
+            target_count=jockey_1m_top2_count
+            race_count=jockey_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_top2_rate=cal_result
+            jockey_1m_top2_rate=cal_result
+
+            target_count=jockey_3m_top2_count
+            race_count=jockey_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_top2_rate=cal_result
 
             target_count=jockey_6m_top2_count
             race_count=jockey_6m_race_count
@@ -2125,15 +2245,20 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             jockey_12m_top2_rate=cal_result
 
             #複勝率を算出する
-            target_count=jockey_5run_top3_count
-            race_count=jockey_5run_race_count
+            target_count=jockey_today_top3_count
+            race_count=jockey_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_top3_rate=cal_result
+            jockey_today_top3_rate=cal_result
 
-            target_count=jockey_10run_top3_count
-            race_count=jockey_10run_race_count
+            target_count=jockey_1m_top3_count
+            race_count=jockey_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_top3_rate=cal_result
+            jockey_1m_top3_rate=cal_result
+
+            target_count=jockey_3m_top3_count
+            race_count=jockey_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_top3_rate=cal_result
 
             target_count=jockey_6m_top3_count
             race_count=jockey_6m_race_count
@@ -2146,173 +2271,251 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             jockey_12m_top3_rate=cal_result
 
             #その他の項目を算出する
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            for e in jockey_close5_run_array:
-                rank=int(e["rank"])
+            for e in today_array:
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
-            race_count=jockey_5run_race_count
+            race_count=jockey_today_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_avg_rank=cal_result
+            jockey_today_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=jockey_5run_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_avg_time_lag=cal_result
+            jockey_today_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=jockey_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_avg_ninki=cal_result
+            jockey_today_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=jockey_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_avg_rank_minus_ninki=cal_result
+            jockey_today_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=jockey_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_5run_better_than_ninki_rate=cal_result
+            jockey_today_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
-            for e in jockey_close10_run_array:
-                rank=int(e["rank"])
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+           
+            for e in month1_array:
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
-            race_count=jockey_10run_race_count
+            race_count=jockey_1m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_avg_rank=cal_result
+            jockey_1m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=jockey_10run_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_avg_time_lag=cal_result
+            jockey_1m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=jockey_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_avg_ninki=cal_result
+            jockey_1m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=jockey_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_avg_rank_minus_ninki=cal_result
+            jockey_1m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=jockey_10run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
-            jockey_10run_better_than_ninki_rate=cal_result
+            jockey_1m_better_than_ninki_rate=cal_result
+            
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
+            for e in month3_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
+                rank_sum=rank+rank_sum
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
+            target_count=rank_sum
+            race_count=jockey_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_avg_rank=cal_result
+
+            target_count=time_lag_sum
+            race_count=time_lag_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_avg_time_lag=cal_result
+
+            target_count=ninki_sum
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_avg_ninki=cal_result
+
+            target_count=rank_ninki_sum
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_avg_rank_minus_ninki=cal_result
+
+            target_count=over_rank_count
+            race_count=ninki_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_better_than_ninki_rate=cal_result
+
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month6_array:
-                rank=int(e["rank"])
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
             race_count=jockey_6m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=jockey_6m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=jockey_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=jockey_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=jockey_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+            
             for e in month12_array:
-                rank=int(e["rank"])
+                rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
+                else:
+                    pass
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                ninki_sum=ninki_sum+ninki
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
-
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                
             target_count=rank_sum
             race_count=jockey_12m_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=jockey_12m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_avg_time_lag=cal_result
 
             target_count=ninki_sum
-            race_count=jockey_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=jockey_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=jockey_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=0
-
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+        
             data=[race_id,umaban,summary_day, jockey_id,
-                jockey_5run_race_count,jockey_10run_race_count,jockey_6m_race_count,jockey_12m_race_count,
-                jockey_5run_win_count,jockey_10run_win_count,jockey_6m_win_count,jockey_12m_win_count,
-                jockey_5run_top2_count,jockey_10run_top2_count,jockey_6m_top2_count,jockey_12m_top2_count,
-                jockey_5run_top3_count,jockey_10run_top3_count,jockey_6m_top3_count,jockey_12m_top3_count,
-                jockey_5run_win_rate,jockey_10run_win_rate,jockey_6m_win_rate,jockey_12m_win_rate,
-                jockey_5run_top2_rate,jockey_10run_top2_rate,jockey_6m_top2_rate,jockey_12m_top2_rate,
-                jockey_5run_top3_rate,jockey_10run_top3_rate,jockey_6m_top3_rate,jockey_12m_top3_rate,
-                jockey_5run_avg_rank,jockey_10run_avg_rank,jockey_6m_avg_rank,jockey_12m_avg_rank,
-                jockey_5run_avg_time_lag,jockey_10run_avg_time_lag,jockey_6m_avg_time_lag,jockey_12m_avg_time_lag,
-                jockey_5run_avg_ninki,jockey_10run_avg_ninki,jockey_6m_avg_ninki,jockey_12m_avg_ninki,           
-                jockey_5run_avg_rank_minus_ninki,jockey_10run_avg_rank_minus_ninki,jockey_6m_avg_rank_minus_ninki,jockey_12m_avg_rank_minus_ninki,
-                jockey_5run_better_than_ninki_rate,jockey_10run_better_than_ninki_rate,jockey_6m_better_than_ninki_rate,jockey_12m_better_than_ninki_rate]
+                jockey_today_race_count,jockey_1m_race_count,jockey_3m_race_count,jockey_6m_race_count,jockey_12m_race_count,
+                jockey_today_win_count,jockey_1m_win_count,jockey_3m_win_count,jockey_6m_win_count,jockey_12m_win_count,
+                jockey_today_top2_count,jockey_1m_top2_count,jockey_3m_top2_count,jockey_6m_top2_count,jockey_12m_top2_count,
+                jockey_today_top3_count,jockey_1m_top3_count,jockey_3m_top3_count,jockey_6m_top3_count,jockey_12m_top3_count,
+                jockey_today_win_rate,jockey_1m_win_rate,jockey_3m_win_rate,jockey_6m_win_rate,jockey_12m_win_rate,
+                jockey_today_top2_rate,jockey_1m_top2_rate,jockey_3m_top2_rate,jockey_6m_top2_rate,jockey_12m_top2_rate,
+                jockey_today_top3_rate,jockey_1m_top3_rate,jockey_3m_top3_rate,jockey_6m_top3_rate,jockey_12m_top3_rate,
+                jockey_today_avg_rank,jockey_1m_avg_rank,jockey_3m_avg_rank,jockey_6m_avg_rank,jockey_12m_avg_rank,
+                jockey_today_avg_time_lag,jockey_1m_avg_time_lag,jockey_3m_avg_time_lag,jockey_6m_avg_time_lag,jockey_12m_avg_time_lag,
+                jockey_today_avg_ninki,jockey_1m_avg_ninki,jockey_3m_avg_ninki,jockey_6m_avg_ninki,jockey_12m_avg_ninki,           
+                jockey_today_avg_rank_minus_ninki,jockey_1m_avg_rank_minus_ninki,jockey_3m_avg_rank_minus_ninki,jockey_6m_avg_rank_minus_ninki,jockey_12m_avg_rank_minus_ninki,
+                jockey_today_better_than_ninki_rate,jockey_1m_better_than_ninki_rate,jockey_3m_better_than_ninki_rate,jockey_6m_better_than_ninki_rate,jockey_12m_better_than_ninki_rate]
             
             summary_key=(race_id,umaban)
             if summary_key in check_array:
@@ -2321,11 +2524,12 @@ def jockey_summary(race_day_dict,jockey_race_result_dict,jockey_id_array):
             else:
                 jockey_summary_array.append(data)
                 check_array.add(summary_key)
-                
+
         summary_count=summary_count+1
-    insert_flag=3
+
+    print("調教師の集計完了")
     target_array=jockey_summary_array
-    print("騎手の集計完了")
+    insert_flag=2
     return target_array,insert_flag
 
 def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
@@ -2372,14 +2576,21 @@ def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+            
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2458,14 +2669,21 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2544,14 +2762,21 @@ def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_di
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2630,14 +2855,21 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2716,14 +2948,21 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2802,14 +3041,21 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2888,14 +3134,21 @@ def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+            
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -2976,14 +3229,21 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -3065,14 +3325,21 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -3152,14 +3419,21 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
@@ -3239,14 +3513,21 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
             top3_rate=cal_result
 
             rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-            for r in horse_place_close_run_array:
-                rank=r["race_rank"]
-                time_lag=r["time_lag"]
-                ninki=r["race_ninki"]
-                ninki_sum=ninki+ninki_sum
+
+            for e in horse_place_close_run_array:
+                rank=int(e["race_rank"])
+                time_lag=int(e["time_lag"])
+                if time_lag!=9999:
+                    time_lag_sum=time_lag_sum+time_lag
+                else:
+                    pass
+                ninki=int(e["race_ninki"])
+                last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                time_lag_sum=time_lag_sum+time_lag
-                rank_ninki_sum=rank_ninki_sum+(rank-ninki)
+                
+                ninki_sum=ninki_sum+ninki
+                last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
+                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
                 if rank<ninki:
                     over_rank_count=over_rank_count+1
 
