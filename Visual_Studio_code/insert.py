@@ -39,8 +39,8 @@ def main():
     print("フォルダ内の初期のファイル名の取得完了")
 
     #mysqlのdump（バックアップを取得処理を追加する)
-    # print("mysqlのdump開始")
-    # dump_mysql()
+    print("mysqlのdump開始")
+    dump_mysql()
 
     while len(race_result_filename_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -57,17 +57,17 @@ def main():
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
         
-        # #修正項目の確認要請メールを送る処理
-        # if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
-        #     sent_mail(sent_mail_stop_array,sent_mail_double_array)
-        # print("race_resultのインサート開始")
-        # insert_race_result(from_dict_to_converted_array,conn,cursor)
+        #修正項目の確認要請メールを送る処理
+        if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
+            sent_mail(sent_mail_stop_array,sent_mail_double_array)
+        print("race_resultのインサート開始")
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
         
         #データの集約
         print("データの集計を開始します。")
         trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
-        # target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
-        # summary_insert(conn,cursor,target_array,insert_flag)
+        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
@@ -101,78 +101,78 @@ def main():
         move_file(target_file_path,move_filename)
         race_result_filename_array=race_result_get_filename(insert_race_result_csv_dir)
         
-    # while len(horse_array)!=0:
-    #     #馬情報の処理
-    #     target_file=horse_array[0]
-    #     target_file_path=insert_horse_csv_dir+"\\"+target_file
-    #     print("馬情報のインサート開始")
-    #     insert_horse(target_file_path,conn,cursor,now)
-    #     move_filename=output_csv+"\\raw_"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     horse_array=horse_get_filename(insert_horse_csv_dir)
+    while len(horse_array)!=0:
+        #馬情報の処理
+        target_file=horse_array[0]
+        target_file_path=insert_horse_csv_dir+"\\"+target_file
+        print("馬情報のインサート開始")
+        insert_horse(target_file_path,conn,cursor,now)
+        move_filename=output_csv+"\\raw_"+target_file
+        move_file(target_file_path,move_filename)
+        horse_array=horse_get_filename(insert_horse_csv_dir)
 
-    # while len(odds_array)!=0:
-    #     #オッズ情報の処理
-    #     target_file=odds_array[0]
-    #     target_file_path=insert_odds_csv_dir+"\\"+target_file
-    #     print("オッズ情報のインサート開始")
-    #     insert_odds(target_file_path,target_file,conn,cursor)
-    #     move_filename=output_csv+"\\"+target_file
-    #     move_file(target_file_path,move_filename)
-    #     odds_array=odds_get_filename(insert_odds_csv_dir)
+    while len(odds_array)!=0:
+        #オッズ情報の処理
+        target_file=odds_array[0]
+        target_file_path=insert_odds_csv_dir+"\\"+target_file
+        print("オッズ情報のインサート開始")
+        insert_odds(target_file_path,target_file,conn,cursor)
+        move_filename=output_csv+"\\"+target_file
+        move_file(target_file_path,move_filename)
+        odds_array=odds_get_filename(insert_odds_csv_dir)
 
-    # #trainer_infoの処理
-    # insert_array,update_array=make_trainer_data(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのインサート処理開始")
-    #     insert_trainer_info(insert_array,conn,cursor)
+    #trainer_infoの処理
+    insert_array,update_array=make_trainer_data(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのインサート処理開始")
+        insert_trainer_info(insert_array,conn,cursor)
 
-    # if len(update_array)!=0:
-    #     fixed_flag=3
-    #     from_dict_to_converted_array=update_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="trainer_update_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("trainer_infoのアップデート処理開始")
-    #     update_trainer_info(update_array,conn,cursor)
+    if len(update_array)!=0:
+        fixed_flag=3
+        from_dict_to_converted_array=update_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="trainer_update_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("trainer_infoのアップデート処理開始")
+        update_trainer_info(update_array,conn,cursor)
 
-    # #jockey_infoの処理
-    # insert_array,update_array=make_jockey_info(cursor,now)
-    # if len(insert_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=insert_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_insert_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのインサート処理開始")
-    #     insert_jockey_info(insert_array,conn,cursor)
+    #jockey_infoの処理
+    insert_array,update_array=make_jockey_info(cursor,now)
+    if len(insert_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=insert_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_insert_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのインサート処理開始")
+        insert_jockey_info(insert_array,conn,cursor)
 
-    # if len(update_array)!=0:
-    #     fixed_flag=4
-    #     from_dict_to_converted_array=update_array.copy()
-    #     print("csvの書き出し処理開始")
-    #     target_file="jockey_update_"+str(now)+".csv"
-    #     make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-    #     print("jockey_infoのアップデート処理開始")
-    #     update_jockey_info(update_array,conn,cursor)
+    if len(update_array)!=0:
+        fixed_flag=4
+        from_dict_to_converted_array=update_array.copy()
+        print("csvの書き出し処理開始")
+        target_file="jockey_update_"+str(now)+".csv"
+        make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
+        print("jockey_infoのアップデート処理開始")
+        update_jockey_info(update_array,conn,cursor)
 
-    # #すべてのcsvをファイルサーバーに移動する
-    # #windowsからファイルサーバーにおくる方式に変更する
-    # export_csv_to_fileserver()
+    #すべてのcsvをファイルサーバーに移動する
+    #windowsからファイルサーバーにおくる方式に変更する
+    export_csv_to_fileserver()
 
-    # #googledriveにアプロードするスクリプトの記述
-    # print("クラウドにバックアップ開始")
-    # upload_cloud()
-    # print("クラウドにバックアップ終了")
+    #googledriveにアプロードするスクリプトの記述
+    print("クラウドにバックアップ開始")
+    upload_cloud()
+    print("クラウドにバックアップ終了")
     
-    # #windowsのローカルファイルを削除する
-    # delete_source_file()
-    # print("すべての処理完了！！")
+    #windowsのローカルファイルを削除する
+    delete_source_file()
+    print("すべての処理完了！！")
 
 def connect_mysql():
     sql_pass=config.sql_pass
@@ -1286,6 +1286,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
         
         #配列の中身と要素を取得する。
         for target_index, r in enumerate(target_array_origin):
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
             race_id=r["race_id"]
             umaban=r["umaban"]
             year=r["year"]
@@ -1313,23 +1314,23 @@ def horse_summary(horse_race_result_dict,horse_id_array):
     
             #6か月の有効出走数を集計する
             #6か月前の日付を算出する
-            before_6month=str(month)-6
+            before_6month=int(month)-6
             if before_6month<=0:
-                before_6year=str(year)-1
+                before_6year=int(year)-1
                 before_6month=12+before_6month
             else:
                 before_6year=year
 
             horse_close6month_run_array=horse_close_run_array.copy()
-            under_day_1=before_6year*10000+before_6month*100+day
+            under_day_1=before_6year*10000+before_6month*100+int(day)
 
             month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
             horse_6m_race_count=len(month6_array)
 
             horse_close1year_run_array=horse_close6month_run_array.copy()
-            before_12year=year-1
+            before_12year=int(year)-1
 
-            under_day_2=before_12year*10000+month*100+day
+            under_day_2=before_12year*10000+int(month)*100+int(day)
             month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
             horse_12m_race_count=len(month12_array)
 
@@ -1436,24 +1437,27 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_12m_top3_rate=cal_result
 
             #その他の項目を算出する
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in horse_close5_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
                 if time_lag!=9999:
                     time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
                 else:
                     pass
-                ninki=int(e["race_ninki"])
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                
-                ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
 
             target_count=rank_sum
             race_count=horse_5run_race_count
@@ -1461,7 +1465,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_5run_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=horse_5run_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_avg_time_lag=cal_result
 
@@ -1471,38 +1475,41 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_5run_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
-            race_count=horse_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=horse_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=horse_5run_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_5run_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            for e in horse_close5_run_array:
+            for e in horse_close10_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
                 if time_lag!=9999:
                     time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
                 else:
                     pass
-                ninki=int(e["race_ninki"])
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                
-                ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
 
             target_count=rank_sum
             race_count=horse_1m_race_count
@@ -1510,7 +1517,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_1m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=horse_1m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_1m_avg_time_lag=cal_result
 
@@ -1520,38 +1527,40 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_1m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
-            race_count=horse_1m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_1m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=horse_1m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_1m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=horse_1m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_1m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
-
-            for e in horse_close5_run_array:
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
+            for e in month6_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
                 if time_lag!=9999:
                     time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
                 else:
                     pass
-                ninki=int(e["race_ninki"])
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                
-                ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
 
             target_count=rank_sum
             race_count=horse_6m_race_count
@@ -1559,7 +1568,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_6m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=horse_6m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_6m_avg_time_lag=cal_result
 
@@ -1569,38 +1578,41 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_6m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
-            race_count=horse_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_6m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=horse_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_6m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=horse_6m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_6m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
-            for e in horse_close5_run_array:
+            for e in month12_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
+                ninki=int(e["race_ninki"])
                 if time_lag!=9999:
                     time_lag_sum=time_lag_sum+time_lag
+                    time_lag_count=time_lag_count+1
                 else:
                     pass
-                ninki=int(e["race_ninki"])
+                if ninki>0:
+                    ninki_sum=ninki_sum+ninki
+                    rank_ninki_sum=(rank-ninki)+rank_ninki_sum
+                    ninki_race_count=ninki_race_count+1
+                    if rank<ninki:
+                        over_rank_count=over_rank_count+1
+                
                 last_3_furlong_rank=int(e["last_3_furlong_rank"])
                 rank_sum=rank+rank_sum
-                
-                ninki_sum=ninki_sum+ninki
                 last_3_furlong_rank_sum=last_3_furlong_rank_sum+last_3_furlong_rank
-                rank_ninki_sum=(rank-ninki)+rank_ninki_sum
-                if rank<ninki:
-                    over_rank_count=over_rank_count+1
 
             target_count=rank_sum
             race_count=horse_12m_race_count
@@ -1608,7 +1620,7 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_12m_avg_rank=cal_result
 
             target_count=time_lag_sum
-            race_count=horse_12m_race_count
+            race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_12m_avg_time_lag=cal_result
 
@@ -1618,21 +1630,21 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             horse_12m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
-            race_count=horse_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_12m_avg_ninki=cal_result
 
             target_count=rank_ninki_sum
-            race_count=horse_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_12m_avg_rank_minus_ninki=cal_result
 
             target_count=over_rank_count
-            race_count=horse_12m_race_count
+            race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             horse_12m_better_than_ninki_rate=cal_result
 
-            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=0
+            rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             data=[race_id,umaban,summary_day, horse_id,
                 horse_5run_race_count,horse_1m_race_count,horse_6m_race_count,horse_12m_race_count,
@@ -1681,6 +1693,9 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
         #race_dayを取り出して基準となるrace_dayを取り出す
         trainer_race_day_list=list(trainer_race_day_dict[str(trainer_id)])
 
+        #rank0を取り除いて有効出走数を算出する
+        trainer_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
+
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in trainer_race_day_list:
             summary_day=h
@@ -1689,9 +1704,6 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             under_day_1=int(h)-300
             under_day_2=int(h)-600
             under_day_3=int(h)-10000
-
-            #rank0を取り除いて有効出走数を算出する
-            trainer_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
 
             #出走期間と出走数を抽出する
             today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day]
@@ -1885,7 +1897,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
            
             for e in month1_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -1931,7 +1943,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month3_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -1977,7 +1989,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month6_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -2023,7 +2035,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
             
             for e in month12_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -2081,7 +2093,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
                 trainer_today_avg_ninki,trainer_1m_avg_ninki,trainer_3m_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
                 trainer_today_avg_rank_minus_ninki,trainer_1m_avg_rank_minus_ninki,trainer_3m_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
                 trainer_today_better_than_ninki_rate,trainer_1m_better_than_ninki_rate,trainer_3m_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
-            
+
             summary_key=(race_id,umaban)
             if summary_key in check_array:
                 print("重複を除外")
@@ -2116,6 +2128,9 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
         #race_dayを取り出して基準となるrace_dayを取り出す
         jockey_race_day_list=list(jockey_race_day_dict[str(jockey_id)])
 
+        #rank0を取り除いて有効出走数を算出する
+        jockey_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
+
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in jockey_race_day_list:
             summary_day=h
@@ -2124,9 +2139,6 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             under_day_1=int(h)-300
             under_day_2=int(h)-600
             under_day_3=int(h)-10000
-
-            #rank0を取り除いて有効出走数を算出する
-            jockey_close_run_array=[r for r in target_array_origin if int(r["rank"])!=0]
 
             #出走期間と出走数を抽出する
             today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==summary_day]
@@ -2320,7 +2332,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
            
             for e in month1_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -2366,7 +2378,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month3_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -2412,7 +2424,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in month6_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -2458,7 +2470,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
             
             for e in month12_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
@@ -3583,7 +3595,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
     elif insert_flag==2:
         while len(target_array)>0:
             insert_target=target_array[:1000]
-            insert_srl="insert into trainer_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            insert_srl="insert into trainer_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
@@ -3591,7 +3603,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
     elif insert_flag==3:
         while len(target_array)>0:
             insert_target=target_array[:1000]
-            insert_srl="insert into jockey_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            insert_srl="insert into jockey_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
