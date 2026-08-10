@@ -1025,7 +1025,6 @@ def make_summary_dict(export_csv_path,cursor):
     horse_place_course_type_dict={}
     trainer_race_day_dict={}
     jockey_race_day_dict={}
-
     horse_id_array=[]
     trainer_id_array=[]
     jockey_id_array=[]
@@ -1041,8 +1040,6 @@ def make_summary_dict(export_csv_path,cursor):
     horse_place_distance_group_key_array=[]
     horse_course_type_distance_group_key_array=[]
     horse_place_course_type_key_array=[]
-
-    trainer_summary_key_array=[]
     jockey_summary_key_array=[]
     query_count=0
     
@@ -1244,7 +1241,6 @@ def make_summary_dict(export_csv_path,cursor):
         if trainer_id not in trainer_summary_dict:
             trainer_summary_dict[trainer_id]=[]
         trainer_summary_dict[trainer_id].append(data_2)
-        trainer_summary_key_array.append(trainer_id)
         
     for row in jockey_summary_result_array:
         jockey_id=row["jockey_id"]
@@ -1267,7 +1263,7 @@ def make_summary_dict(export_csv_path,cursor):
 
     print("horse辞書の作成完了")
 
-    return trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_summary_key_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
+    return trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
 
 def horse_summary(horse_race_result_dict,horse_id_array):
     print("集約の値の算出開始")
@@ -1879,6 +1875,11 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_today_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=trainer_today_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_today_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -1924,6 +1925,11 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_1m_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=trainer_1m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_1m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
             race_count=ninki_race_count
@@ -1971,6 +1977,11 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_3m_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=trainer_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_3m_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -2017,6 +2028,11 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_6m_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=trainer_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_6m_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -2062,6 +2078,11 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             trainer_12m_avg_time_lag=cal_result
+            
+            target_count=last_3_furlong_rank_sum
+            race_count=trainer_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            trainer_12m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
             race_count=ninki_race_count
@@ -2080,7 +2101,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
 
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
         
-            data=[race_id,umaban,summary_day, trainer_id,
+            data=[race_id,umaban,summary_day,trainer_id,
                 trainer_today_race_count,trainer_1m_race_count,trainer_3m_race_count,trainer_6m_race_count,trainer_12m_race_count,
                 trainer_today_win_count,trainer_1m_win_count,trainer_3m_win_count,trainer_6m_win_count,trainer_12m_win_count,
                 trainer_today_top2_count,trainer_1m_top2_count,trainer_3m_top2_count,trainer_6m_top2_count,trainer_12m_top2_count,
@@ -2090,6 +2111,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
                 trainer_today_top3_rate,trainer_1m_top3_rate,trainer_3m_top3_rate,trainer_6m_top3_rate,trainer_12m_top3_rate,
                 trainer_today_avg_rank,trainer_1m_avg_rank,trainer_3m_avg_rank,trainer_6m_avg_rank,trainer_12m_avg_rank,
                 trainer_today_avg_time_lag,trainer_1m_avg_time_lag,trainer_3m_avg_time_lag,trainer_6m_avg_time_lag,trainer_12m_avg_time_lag,
+                trainer_today_avg_last_3f_rank,trainer_1m_avg_last_3f_rank,trainer_6m_avg_last_3f_rank,trainer_12m_avg_last_3f_rank,
                 trainer_today_avg_ninki,trainer_1m_avg_ninki,trainer_3m_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
                 trainer_today_avg_rank_minus_ninki,trainer_1m_avg_rank_minus_ninki,trainer_3m_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
                 trainer_today_better_than_ninki_rate,trainer_1m_better_than_ninki_rate,trainer_3m_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
@@ -2314,6 +2336,11 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_today_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=jockey_today_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_today_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -2359,6 +2386,11 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_1m_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=jockey_1m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_1m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
             race_count=ninki_race_count
@@ -2406,6 +2438,11 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_3m_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=jockey_3m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_3m_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -2451,6 +2488,11 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             race_count=time_lag_count
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_6m_avg_time_lag=cal_result
+
+            target_count=last_3_furlong_rank_sum
+            race_count=jockey_6m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_6m_avg_last_3f_rank=cal_result
 
             target_count=ninki_sum
             race_count=ninki_race_count
@@ -2498,6 +2540,11 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             cal_result=cal_rate_and_ave(target_count,race_count)
             jockey_12m_avg_time_lag=cal_result
 
+            target_count=last_3_furlong_rank_sum
+            race_count=jockey_12m_race_count
+            cal_result=cal_rate_and_ave(target_count,race_count)
+            jockey_12m_avg_last_3f_rank=cal_result
+
             target_count=ninki_sum
             race_count=ninki_race_count
             cal_result=cal_rate_and_ave(target_count,race_count)
@@ -2525,6 +2572,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
                 jockey_today_top3_rate,jockey_1m_top3_rate,jockey_3m_top3_rate,jockey_6m_top3_rate,jockey_12m_top3_rate,
                 jockey_today_avg_rank,jockey_1m_avg_rank,jockey_3m_avg_rank,jockey_6m_avg_rank,jockey_12m_avg_rank,
                 jockey_today_avg_time_lag,jockey_1m_avg_time_lag,jockey_3m_avg_time_lag,jockey_6m_avg_time_lag,jockey_12m_avg_time_lag,
+                jockey_today_avg_last_3f_rank,jockey_1m_avg_last_3f_rank,jockey_3m_avg_last_3f_rank,jockey_6m_avg_last_3f_rank,jockey_12m_avg_last_3f_rank,
                 jockey_today_avg_ninki,jockey_1m_avg_ninki,jockey_3m_avg_ninki,jockey_6m_avg_ninki,jockey_12m_avg_ninki,           
                 jockey_today_avg_rank_minus_ninki,jockey_1m_avg_rank_minus_ninki,jockey_3m_avg_rank_minus_ninki,jockey_6m_avg_rank_minus_ninki,jockey_12m_avg_rank_minus_ninki,
                 jockey_today_better_than_ninki_rate,jockey_1m_better_than_ninki_rate,jockey_3m_better_than_ninki_rate,jockey_6m_better_than_ninki_rate,jockey_12m_better_than_ninki_rate]
@@ -2541,7 +2589,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
 
     print("調教師の集計完了")
     target_array=jockey_summary_array
-    insert_flag=2
+    insert_flag=3
     return target_array,insert_flag
 
 def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
@@ -3595,7 +3643,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
     elif insert_flag==2:
         while len(target_array)>0:
             insert_target=target_array[:1000]
-            insert_srl="insert into trainer_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            insert_srl="insert into trainer_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
@@ -3603,7 +3651,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
     elif insert_flag==3:
         while len(target_array)>0:
             insert_target=target_array[:1000]
-            insert_srl="insert into jockey_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            insert_srl="insert into jockey_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
