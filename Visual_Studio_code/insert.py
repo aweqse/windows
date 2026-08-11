@@ -2111,7 +2111,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
                 trainer_today_top3_rate,trainer_1m_top3_rate,trainer_3m_top3_rate,trainer_6m_top3_rate,trainer_12m_top3_rate,
                 trainer_today_avg_rank,trainer_1m_avg_rank,trainer_3m_avg_rank,trainer_6m_avg_rank,trainer_12m_avg_rank,
                 trainer_today_avg_time_lag,trainer_1m_avg_time_lag,trainer_3m_avg_time_lag,trainer_6m_avg_time_lag,trainer_12m_avg_time_lag,
-                trainer_today_avg_last_3f_rank,trainer_1m_avg_last_3f_rank,trainer_6m_avg_last_3f_rank,trainer_12m_avg_last_3f_rank,
+                trainer_today_avg_last_3f_rank,trainer_1m_avg_last_3f_rank,trainer_3m_avg_last_3f_rank,trainer_6m_avg_last_3f_rank,trainer_12m_avg_last_3f_rank,
                 trainer_today_avg_ninki,trainer_1m_avg_ninki,trainer_3m_avg_ninki,trainer_6m_avg_ninki,trainer_12m_avg_ninki,           
                 trainer_today_avg_rank_minus_ninki,trainer_1m_avg_rank_minus_ninki,trainer_3m_avg_rank_minus_ninki,trainer_6m_avg_rank_minus_ninki,trainer_12m_avg_rank_minus_ninki,
                 trainer_today_better_than_ninki_rate,trainer_1m_better_than_ninki_rate,trainer_3m_better_than_ninki_rate,trainer_6m_better_than_ninki_rate,trainer_12m_better_than_ninki_rate]
@@ -2635,7 +2635,7 @@ def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
             
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -2728,7 +2728,7 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -2821,7 +2821,7 @@ def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_di
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -2914,7 +2914,7 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3007,7 +3007,7 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3100,8 +3100,8 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
-
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
+            
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
                 time_lag=int(e["time_lag"])
@@ -3193,7 +3193,7 @@ def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
             
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3288,7 +3288,7 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3384,7 +3384,7 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3478,7 +3478,7 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
@@ -3572,7 +3572,7 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
             cal_result=cal_rate_and_ave(target_count,race_count)
             top3_rate=cal_result
 
-            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=0
+            rank_sum=ninki_sum=time_lag_sum=over_rank_count=rank_ninki_sum=last_3_furlong_rank_sum=0
 
             for e in horse_place_close_run_array:
                 rank=int(e["race_rank"])
