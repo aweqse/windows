@@ -65,34 +65,34 @@ def main():
         
         #データの集約
         print("データの集計を開始します。")
-        trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_race_result_dict,jockey_race_result_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array=make_summary_dict(export_csv_path,cursor)
+        trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array,target_summary_day_set=make_summary_dict(export_csv_path,cursor)
         target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_array)
+        target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_summary_dict,trainer_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
+        target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_summary_dict,jockey_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array)
+        target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array)
+        target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array) 
+        target_array,insert_flag=horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array,target_summary_day_set) 
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array)
+        target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array)
+        target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array)
+        target_array,insert_flag=horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array)
+        target_array,insert_flag=horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array)
+        target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array)
+        target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array)
+        target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array)
+        target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
         print("データの集約とインサート完了")
 
@@ -788,6 +788,9 @@ def check_data(target_file_path):
             
             (race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details) = TRACK_MAP.get(int(row["track"]), (None, None, None, None, None))
 
+            if turn_direction is None:
+                turn_direction = 2
+
             data=[row["race_id"],row["year"],row["month"],row["day"],row["weekday"],row["kai"],row["nitime"],row["race_number"],row["race_name"],row["place"],row["course_distance"],
                 distance_group,row["track"],race_type,course_type_2,jump_course_type,turn_direction,turn_direction_details,
                 row["course_type"],row["horseage_conditions"],row["race_class"],row["grade"],row["weight_type"],row["only_hinba"],row["weather"],row["turf_condition"],row["dirt_condition"],
@@ -1083,11 +1086,12 @@ def make_summary_dict(export_csv_path,cursor):
     horse_query_str=trainer_query_str=jockey_query_str="("
 
     max_ymd=str(max(ymd_array))
+    target_summary_day_set=set(ymd_array)
 
     while len(horse_id_array)>=query_count:
         if len(horse_id_array)==query_count:
             horse_id=horse_id_array[query_count-1]
-            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+") and year*10000+month*100+day <="+max_ymd+";"
+            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
         elif len(horse_id_array)>query_count:
             horse_id=horse_id_array[query_count]
             horse_query_str=horse_query_str+"horse_id="+str(horse_id)+" or "
@@ -1097,7 +1101,7 @@ def make_summary_dict(export_csv_path,cursor):
     while len(trainer_id_array)>=query_count:
         if len(trainer_id_array)==query_count:
             trainer_id=trainer_id_array[query_count-1]
-            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+") and year*10000+month*100+day <="+max_ymd+";"
+            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
         elif len(trainer_id_array)>query_count:
             trainer_id=trainer_id_array[query_count]
             trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+" or "
@@ -1107,7 +1111,7 @@ def make_summary_dict(export_csv_path,cursor):
     while len(jockey_id_array)>=query_count:
         if len(jockey_id_array)==query_count:
             jockey_id=jockey_id_array[query_count-1]
-            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+") and year*10000+month*100+day <="+max_ymd+";"
+            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
         elif len(jockey_id_array)>query_count:
             jockey_id=jockey_id_array[query_count]
             jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+" or "
@@ -1263,9 +1267,9 @@ def make_summary_dict(export_csv_path,cursor):
 
     print("horse辞書の作成完了")
 
-    return trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array
+    return trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array,target_summary_day_set
 
-def horse_summary(horse_race_result_dict,horse_id_array):
+def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
     print("集約の値の算出開始")
     summary_count=0
     horse_close_run_array=[]
@@ -1294,6 +1298,8 @@ def horse_summary(horse_race_result_dict,horse_id_array):
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
+            if int(summary_day) not in target_summary_day_set:
+                continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
@@ -1702,19 +1708,17 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             under_day_3=int(h)-10000
 
             #出走期間と出走数を抽出する
-            today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day]
+            summary_day_int=int(summary_day)
+            today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day_int]
+            month1_array=[s for s in trainer_close_run_array if under_day_0 <= int(s["trainer_race_day"]) <= summary_day_int]
+            month3_array=[s for s in trainer_close_run_array if under_day_1 <= int(s["trainer_race_day"]) <= summary_day_int]
+            month6_array=[s for s in trainer_close_run_array if under_day_2 <= int(s["trainer_race_day"]) <= summary_day_int]
+            month12_array=[s for s in trainer_close_run_array if under_day_3 <= int(s["trainer_race_day"]) <= summary_day_int]
+
             trainer_today_race_count=len(today_array)
-
-            month1_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_0]
             trainer_1m_race_count=len(month1_array)
-
-            month3_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_1]
             trainer_3m_race_count=len(month3_array)
-
-            month6_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_2]
             trainer_6m_race_count=len(month6_array)
-
-            month12_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])>=under_day_3]
             trainer_12m_race_count=len(month12_array)
 
             #一着回数を算出する
@@ -2164,18 +2168,15 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
 
             #出走期間と出走数を抽出する
             today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==summary_day]
-            jockey_today_race_count=len(today_array)
-
             month1_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_0]
-            jockey_1m_race_count=len(month1_array)
-
             month3_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_1]
-            jockey_3m_race_count=len(month3_array)
-
             month6_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_2]
-            jockey_6m_race_count=len(month6_array)
-
             month12_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_3]
+            
+            jockey_today_race_count=len(today_array)
+            jockey_1m_race_count=len(month1_array)
+            jockey_3m_race_count=len(month3_array)
+            jockey_6m_race_count=len(month6_array)
             jockey_12m_race_count=len(month12_array)
 
             #一着回数を算出する
@@ -2592,7 +2593,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
     insert_flag=3
     return target_array,insert_flag
 
-def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
+def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array,target_summary_day_set):
     summary_count=0
     horse_place_summary_array=[]
     while len(horse_id_and_place_key_array)>summary_count:
@@ -2612,6 +2613,8 @@ def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
+            if int(summary_day) not in target_summary_day_set:
+                continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
@@ -2685,7 +2688,7 @@ def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array):
     print("馬と競馬場の集計完了")
     return target_array,insert_flag
 
-def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array):
+def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array,target_summary_day_set):
     summary_count=0
     horse_distance_group_array=[]
     while len(horse_distance_group_key_array)>summary_count:
@@ -2705,7 +2708,8 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -2778,7 +2782,7 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
     print("馬と距離グループの集計完了")
     return target_array,insert_flag
 
-def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array):
+def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array,target_summary_day_set):
     summary_count=0
     horse_course_distance_array=[]
     while len(horse_course_distancerace_key_array)>summary_count:
@@ -2798,7 +2802,8 @@ def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_di
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -2871,7 +2876,7 @@ def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_di
     print("馬と距離の集計完了")
     return target_array,insert_flag
 
-def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array):
+def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array,target_summary_day_set):
     summary_count=0
     horse_course_type_array=[]
     while len(horse_course_type_key_array)>summary_count:
@@ -2891,6 +2896,8 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
+            if int(summary_day) not in target_summary_day_set:
+                continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
@@ -2964,7 +2971,7 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
     print("馬とコースタイプの集計完了")
     return target_array,insert_flag
 
-def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array):
+def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array,target_summary_day_set):
     summary_count=0
     horse_turn_direction_array=[]
     while len(horse_turn_direction_key_array)>summary_count:
@@ -2984,7 +2991,8 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3057,7 +3065,7 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
     print("馬と周回方向の集計完了")
     return target_array,insert_flag
 
-def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array):
+def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set):
     summary_count=0
     horse_turn_course_type_array=[]
     while len(horse_turf_course_type_array)>summary_count:
@@ -3077,7 +3085,8 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3150,7 +3159,7 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
     print("馬とコースタイプの集計完了")
     return target_array,insert_flag
 
-def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array):
+def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set):
     summary_count=0
     horse_turn_condition_array=[]
     while len(horse_turf_condition_key_array)>summary_count:
@@ -3170,7 +3179,8 @@ def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3245,7 +3255,7 @@ def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
     print("馬と芝の状態の集計完了")
     return target_array,insert_flag
 
-def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array):
+def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array,target_summary_day_set):
     summary_count=0
     horse_dirt_condition_array=[]
     while len(horse_dirt_condition_key_array)>summary_count:
@@ -3265,7 +3275,8 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3340,7 +3351,7 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
     print("馬とダート状態の集計完了")
     return target_array,insert_flag
 
-def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array):
+def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array,target_summary_day_set):
     summary_count=0
     horse_place_distance_group=[]
     while len(horse_place_distance_group_key_array)>summary_count:
@@ -3361,7 +3372,8 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3434,7 +3446,7 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
     print("馬と競馬場と距離グループの集計完了")
     return target_array,insert_flag
 
-def horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array):
+def horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array,target_summary_day_set):
     summary_count=0
     horse_course_type_distance_group=[]
     while len(horse_course_type_distance_group_key_array)>summary_count:
@@ -3455,7 +3467,8 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
@@ -3528,7 +3541,7 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
     print("馬とコースタイプと距離グループの集計完了")
     return target_array,insert_flag
 
-def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array):
+def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array,target_summary_day_set):
     summary_count=0
     horse_place_course_type=[]
     while len(horse_place_course_type_key_array)>summary_count:
@@ -3549,7 +3562,8 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
             if len(str(day))==1:
                 day="0"+str(day)
             summary_day=str(year)+str(month)+str(day)
-
+            if int(summary_day) not in target_summary_day_set:
+                continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
             target_array = target_array_origin[target_index :]
 
