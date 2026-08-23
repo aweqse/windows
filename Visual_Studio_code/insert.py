@@ -66,7 +66,7 @@ def main():
         #データの集約
         print("データの集計を開始します。")
         trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array,target_summary_day_set=make_summary_dict(export_csv_path,cursor)
-        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array)
+        target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_summary_dict,trainer_id_array)
         summary_insert(conn,cursor,target_array,insert_flag)
@@ -1091,7 +1091,7 @@ def make_summary_dict(export_csv_path,cursor):
     while len(horse_id_array)>=query_count:
         if len(horse_id_array)==query_count:
             horse_id=horse_id_array[query_count-1]
-            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
+            horse_query_str=horse_query_str+"horse_id="+str(horse_id)+") and year*10000+month*100+day <="+max_ymd+";"
         elif len(horse_id_array)>query_count:
             horse_id=horse_id_array[query_count]
             horse_query_str=horse_query_str+"horse_id="+str(horse_id)+" or "
@@ -1101,7 +1101,7 @@ def make_summary_dict(export_csv_path,cursor):
     while len(trainer_id_array)>=query_count:
         if len(trainer_id_array)==query_count:
             trainer_id=trainer_id_array[query_count-1]
-            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
+            trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+") and year*10000+month*100+day <="+max_ymd+";"
         elif len(trainer_id_array)>query_count:
             trainer_id=trainer_id_array[query_count]
             trainer_query_str=trainer_query_str+"trainer_id="+str(trainer_id)+" or "
@@ -1111,7 +1111,7 @@ def make_summary_dict(export_csv_path,cursor):
     while len(jockey_id_array)>=query_count:
         if len(jockey_id_array)==query_count:
             jockey_id=jockey_id_array[query_count-1]
-            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+") and <= year*10000+month*100+day and year*10000+month*100+day <="+max_ymd+";"
+            jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+") and year*10000+month*100+day <="+max_ymd+";"
         elif len(jockey_id_array)>query_count:
             jockey_id=jockey_id_array[query_count]
             jockey_query_str=jockey_query_str+"jockey_id="+str(jockey_id)+" or "
