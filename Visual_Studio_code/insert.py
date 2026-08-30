@@ -161,12 +161,6 @@ def main():
         print("jockey_infoのアップデート処理開始")
         update_jockey_info(update_array,conn,cursor)
 
-    #全体のrace_resultの重複チェック
-    cheak_duble()
-
-
-
-
     #すべてのcsvをファイルサーバーに移動する
     #windowsからファイルサーバーにおくる方式に変更する
     export_csv_to_fileserver()
