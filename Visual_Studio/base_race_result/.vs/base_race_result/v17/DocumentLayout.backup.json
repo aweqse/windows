@@ -5,6 +5,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|c:\\users\\dev-w\\desktop\\workspace\\ai\\visual_studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|solutionrelative:base_race_result\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\properties\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{D9565405-B195-4E3D-8817-BA91BFB96079}|base_race_result\\base_race_result.csproj|solutionrelative:base_race_result\\properties\\base_race_result_optimized.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,12 +26,24 @@
               "Title": "base_race_result_optimized.cs",
               "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs",
               "RelativeDocumentMoniker": "base_race_result\\base_race_result_optimized.cs",
-              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs",
-              "RelativeToolTip": "base_race_result\\base_race_result_optimized.cs",
-              "ViewState": "AgIAADIAAAAAAAAAAAAAwDsAAAAbAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\base_race_result_optimized.cs*",
+              "RelativeToolTip": "base_race_result\\base_race_result_optimized.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAA0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-12T12:36:00.999Z",
+              "WhenOpened": "2026-08-30T12:45:48.424Z",
               "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "base_race_result_optimized.cs",
+              "DocumentMoniker": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\Properties\\base_race_result_optimized.cs",
+              "RelativeDocumentMoniker": "base_race_result\\Properties\\base_race_result_optimized.cs",
+              "ToolTip": "C:\\Users\\dev-w\\Desktop\\workspace\\AI\\Visual_Studio\\base_race_result\\base_race_result\\Properties\\base_race_result_optimized.cs",
+              "RelativeToolTip": "base_race_result\\Properties\\base_race_result_optimized.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJoAAABTAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-08-30T12:34:44.633Z"
             }
           ]
         }

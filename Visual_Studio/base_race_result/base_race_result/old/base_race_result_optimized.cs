@@ -12,16 +12,6 @@ using static JVData_Struct;
 
 class Program
 {
-    // ================================================================
-    // ★ 取得期間の設定（通常はこの3行だけ変更してください）
-    // ================================================================
-    // false: 先週の月曜～日曜を自動取得
-    // true : 下記の開始日～終了日を取得
-    static readonly bool UseManualDateRange = true;
-    static readonly string ManualStartDateText = "20250101"; // 開始日 yyyyMMdd
-    static readonly string ManualEndDateText = "20251231";   // 終了日 yyyyMMdd
-    // ================================================================
-
     // FlattenObject後の辞書は読み取り専用として扱うため、項目名のサフィックス索引を再利用できる。
     // 従来のPickは候補ごとに辞書全体を走査していたため、大量レコードで大きな負荷になっていた。
     static readonly ConditionalWeakTable<Dictionary<string, string>, Dictionary<string, string>> PickIndexCache
@@ -32,7 +22,7 @@ class Program
     // =========================
 
     // 通常運用では「先週の月曜〜日曜」のレース結果だけを取得する。
-    // 手動指定はファイル上部の「取得期間の設定」で切り替える。
+    // 手動で範囲指定したい場合は、Main内の「手動範囲指定」2行のコメントアウトを外す。
     //
     // 2 = 通常データ取得。週次差分・直近取得向け。
     // 過去年分などセットアップデータを取り直す場合は 4 に変更する。
@@ -65,34 +55,29 @@ class Program
     {
         Console.OutputEncoding = Encoding.UTF8;
 
-        DateTime startDate;
-        DateTime endDate;
-        string startDateText;
-        string endDateText;
-        string acquisitionMode;
+        // 通常運用：
+        // 今日の日付を基準にして「先週の月曜〜日曜」を自動取得する。
+        DateTime startDate = GetLastWeekMonday(DateTime.Today);
+        DateTime endDate = startDate.AddDays(6);
 
-        // exe引数を最優先する。
-        // 例: base_race_result.exe 20200101 20201231
+        string startDateText = ToYmd(startDate);
+        string endDateText = ToYmd(endDate);
+
+        // =========================
+        // 手動範囲指定
+        // =========================
+        // 範囲を直接指定したい場合は、下の2行のコメントアウトを外して日付を変更する。
+        // 例: 2024年の1年分を取得する場合
+        startDateText = "20190101";
+        endDateText = "20191231";
+
+        // exe引数で開始日・終了日を渡した場合は、引数を最優先する。
+        // 例:
+        //   base_race_result.exe 20240101 20241231
         if (args.Length >= 2)
         {
             startDateText = args[0];
             endDateText = args[1];
-            acquisitionMode = "exe引数による手動範囲指定";
-        }
-        else if (UseManualDateRange)
-        {
-            startDateText = ManualStartDateText;
-            endDateText = ManualEndDateText;
-            acquisitionMode = "ソース内の手動範囲指定";
-        }
-        else
-        {
-            // 通常運用：今日を基準に「先週の月曜～日曜」を自動取得する。
-            startDate = GetLastWeekMonday(DateTime.Today);
-            endDate = startDate.AddDays(6);
-            startDateText = ToYmd(startDate);
-            endDateText = ToYmd(endDate);
-            acquisitionMode = "先週分自動取得";
         }
 
         if (!Is8Digits(startDateText) || !Is8Digits(endDateText))
@@ -131,7 +116,7 @@ class Program
         Console.WriteLine("CSV path=" + outCsv);
         Console.WriteLine("取得開始日=" + startDate.ToString("yyyy-MM-dd"));
         Console.WriteLine("取得終了日=" + endDate.ToString("yyyy-MM-dd"));
-        Console.WriteLine("取得モード=" + acquisitionMode);
+        Console.WriteLine("取得モード=先週分自動取得。手動範囲指定またはexe引数がある場合は指定範囲を使用。");
 
         if (!IsJvDateRange(raceDateRange))
         {
