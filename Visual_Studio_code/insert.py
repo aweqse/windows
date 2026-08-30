@@ -161,6 +161,12 @@ def main():
         print("jockey_infoのアップデート処理開始")
         update_jockey_info(update_array,conn,cursor)
 
+    #全体のrace_resultの重複チェック
+    cheak_duble()
+
+
+
+
     #すべてのcsvをファイルサーバーに移動する
     #windowsからファイルサーバーにおくる方式に変更する
     export_csv_to_fileserver()
@@ -1851,7 +1857,7 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in today_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
