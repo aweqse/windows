@@ -48,7 +48,7 @@ def main():
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
         move_filename=output_csv+"\\"+target_file
         print("データのチェックを開始")
-        race_result_insert_data,fixed_flag,sent_mail_stop_array,sent_mail_double_array=check_data(target_file_path)
+        race_result_insert_data,fixed_flag,race_id_array,race_id_set=check_data(target_file_path)
         print("辞書を配列に変換開始")
         from_dict_to_converted_array=convert_form_dict_to_list(race_result_insert_data)
 
@@ -56,12 +56,11 @@ def main():
         export_csv_path=target_file_path
         print("csvに書き出す処理開始") 
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
-        
-        #修正項目の確認要請メールを送る処理
-        if len(sent_mail_stop_array)!=0 or len(sent_mail_double_array)!=0:
-            sent_mail(sent_mail_stop_array,sent_mail_double_array)
+
         print("race_resultのインサート開始")
         insert_race_result(from_dict_to_converted_array,conn,cursor)
+
+        insert_check(cursor,race_id_set)
         
         #データの集約
         print("データの集計を開始します。")
@@ -82,9 +81,9 @@ def main():
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set)
+        target_array,insert_flag=horse_course_type_detail_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
-        target_array,insert_flag=horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set)
+        target_array,insert_flag=horse_turf_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array,target_summary_day_set)
         summary_insert(conn,cursor,target_array,insert_flag)
@@ -219,9 +218,9 @@ def horse_get_filename(insert_horse_csv_dir):
     return horse_array
 
 #レース情報の処理
-def insert_race_result(for_insert_and_make_csv_array,conn,cursor):
+def insert_race_result(from_dict_to_converted_array,conn,cursor):
     insert_query="insert into race_result values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-    cursor.executemany(insert_query, for_insert_and_make_csv_array)
+    cursor.executemany(insert_query, from_dict_to_converted_array)
     conn.commit()
     print("レース結果をコミットしました。")
 
@@ -733,9 +732,8 @@ def check_data(target_file_path):
     race_result_insert_data={}
     race_id_array=[]
     unique_key_array=[]
+    race_id_set=[]
     check_array_count=0
-    sent_mail_stop_array=[]
-    sent_mail_double_array=[]
     fixed_flag=0
     
     #検査用の辞書とrace_idの配列を作成する
@@ -803,7 +801,9 @@ def check_data(target_file_path):
             #nullチェックをする
             print("nullチェック開始")
             data=convert_null(data)
-            
+
+            race_id_set.append(row["race_id"])
+
             # race_idだけだと代替開催・取りやめで混ざるので年月日を足す
             print("拡張レースIDの取得開始")
             race_id = row["race_id"] + row["year"] + row["month"] + row["day"]
@@ -830,9 +830,6 @@ def check_data(target_file_path):
             # rankがすべて0の場合、レース取りやめの可能性があるため配列を削除する
             if all(int(e[48]) == 0 for e in rank_cheak_array):
                 del race_result_insert_data[race_id]
-                # 通知には元のrace_idだけ入れる
-                if rank_cheak_array[0][0] not in sent_mail_stop_array:
-                    sent_mail_stop_array.append(rank_cheak_array[0][0])
                 fixed_flag = 1
                 check_array_count = check_array_count + 1
                 print("レースの取り止めあり")
@@ -845,15 +842,14 @@ def check_data(target_file_path):
                     unique_key_array.remove(unir_value)
                 else:
                     race_result_insert_data.pop(race_id, None)
-                    if r[0] not in sent_mail_double_array:
-                        sent_mail_double_array.append(r[0])
                     fixed_flag = 1
                     print("馬番被りあり:", r[0])
-
                     break
+                
             check_array_count = check_array_count + 1
 
-        return race_result_insert_data, fixed_flag, sent_mail_stop_array,sent_mail_double_array
+        race_id_set=set(race_id_set)
+        return race_result_insert_data, fixed_flag,race_id_array,race_id_set
 
 def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
@@ -892,9 +888,9 @@ def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
         writer.writerows(export_csv_array)    
     return export_csv_path
 
-def sent_mail(sent_mail_stop_array,sent_mail_double_array):
+def sent_mail(not_exists_array):
     str_count=0
-    str=""
+    main_str=""
 
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly','https://www.googleapis.com/auth/gmail.send']
     json_path=config.json_path
@@ -909,10 +905,10 @@ def sent_mail(sent_mail_stop_array,sent_mail_double_array):
         creds = flow.run_local_server(port=8080)
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
-    if len(sent_mail_stop_array)!=0:
-        while len(sent_mail_stop_array)>str_count:
-            str_temp=sent_mail_stop_array[str_count]
-            str=str+str_temp+"\n"
+    if len(not_exists_array)!=0:
+        while len(not_exists_array)>str_count:
+            str_temp=not_exists_array[str_count]
+            main_str=str(main_str)+str(str_temp)+"\n"
             str_count=str_count+1
 
         service = build('gmail', 'v1', credentials=creds)
@@ -920,9 +916,8 @@ def sent_mail(sent_mail_stop_array,sent_mail_double_array):
         to = "aweqsenotice@gmail.com"
         subject = "インサートcsv不備"
         send_text = (
-            "CSVにレース取りやめがあります。\n"
-            "手動での対処は必要ないはずですが念のためmysqlで対象のレースIDを条件にrankを検索して0出ないことを確認してください。\n"
-            f"レースIDは \n {str} です。"
+            "馬番重複があります。確認して手動で対処してください\n"
+            f"レースIDは \n {main_str} です。"
         )
 
         message = MIMEText(send_text, "plain", "utf-8")
@@ -945,43 +940,6 @@ def sent_mail(sent_mail_stop_array,sent_mail_double_array):
         except Exception as e:
             print(f"メール送信失敗 race_id={str}")
             print(e)
-    else:
-        while len(sent_mail_double_array)>str_count:
-            str_temp=sent_mail_double_array[str_count]
-            str=str+str_temp+"\n"
-            str_count=str_count+1
-
-        service = build('gmail', 'v1', credentials=creds)
-        sender = "aweqsenotice@gmail.com"
-        to = "aweqsenotice@gmail.com"
-        subject = "インサートcsv不備"
-        send_text = (
-            "CSVに馬番の重複があります。\n"
-            "記載されているレースIDは中途半端にmysqlに登録されている可能性があるのでレースIDで検索して必要ならば削除してください。その後、CSVを修正しインサート処理を実行してください\n"
-            f"レースIDは \n {str} です。"
-        )
-
-        message = MIMEText(send_text, "plain", "utf-8")
-        message["to"] = to
-        message["from"] = sender
-        message["subject"] = subject
-
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        message_body = {"raw": raw_message}
-
-        try:
-            response = service.users().messages().send(
-                userId="me",
-                body=message_body
-            ).execute()
-
-            print(f"メールの送信完了 race_id={str}")
-            return response
-
-        except Exception as e:
-            print(f"メール送信失敗 race_id={str}")
-            print(e)
-
 
 def convert_form_dict_to_list(target_dict):
     from_dict_to_converted_array=[]
@@ -3065,7 +3023,7 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
     print("馬と周回方向の集計完了")
     return target_array,insert_flag
 
-def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set):
+def horse_course_type_detail_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set):
     summary_count=0
     horse_turn_course_type_array=[]
     while len(horse_turf_course_type_array)>summary_count:
@@ -3159,7 +3117,7 @@ def horse_turn_course_type_summary(turf_course_type_dict,horse_turf_course_type_
     print("馬とコースタイプの集計完了")
     return target_array,insert_flag
 
-def horse_turn_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set):
+def horse_turf_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set):
     summary_count=0
     horse_turn_condition_array=[]
     while len(horse_turf_condition_key_array)>summary_count:
@@ -3713,7 +3671,7 @@ def summary_insert(conn,cursor,target_array,insert_flag):
     elif insert_flag==9:
         while len(target_array)>0:
             insert_target=target_array[:1000]
-            insert_srl="insert into horse_turf_course_type_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            insert_srl="insert into horse_course_type_detail_summary values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             cursor.executemany(insert_srl, insert_target)
             conn.commit()
             del target_array[:len(insert_target)]
@@ -3759,5 +3717,24 @@ def summary_insert(conn,cursor,target_array,insert_flag):
             del target_array[:len(insert_target)]
 
     print("インサート処理が完了しました")
+
+def insert_check(cursor, race_id_set):
+    insert_check_query = "SELECT DISTINCT race_id FROM race_result;"
+    cursor.execute(insert_check_query)
+    insert_check = cursor.fetchall()
+
+    db_race_id_set = {str(row["race_id"]) for row in insert_check}
+    race_id_set = {str(value) for value in race_id_set}
+
+    not_exists_array = []
+
+    for race_id in race_id_set:
+        if race_id not in db_race_id_set:
+            not_exists_array.append(race_id)
+
+    if len(not_exists_array) != 0:
+        sent_mail(not_exists_array)
+
+    return
 
 main()
