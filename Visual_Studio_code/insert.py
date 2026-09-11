@@ -48,7 +48,14 @@ def main():
         target_file_path=insert_race_result_csv_dir+"\\"+target_file
         move_filename=output_csv+"\\"+target_file
         print("データのチェックを開始")
-        race_result_insert_data,fixed_flag,race_id_array,race_id_set=check_data(target_file_path)
+        race_result_insert_data,fixed_flag,race_id_array,race_id_set,umaban_double_array=check_data(target_file_path)
+
+        #馬番の重複がある場合はメールで送信する処理
+        if len(umaban_double_array)!=0:
+            sent_mail_array=umaban_double_array
+            sent_mail_flag=2
+            sent_mail(sent_mail_array,sent_mail_flag)
+
         print("辞書を配列に変換開始")
         from_dict_to_converted_array=convert_form_dict_to_list(race_result_insert_data)
 
@@ -61,6 +68,8 @@ def main():
         insert_race_result(from_dict_to_converted_array,conn,cursor)
 
         insert_check(cursor,race_id_set)
+
+        Unexpected_insert(cursor)
         
         #データの集約
         print("データの集計を開始します。")
@@ -733,6 +742,7 @@ def check_data(target_file_path):
     race_id_array=[]
     unique_key_array=[]
     race_id_set=[]
+    umaban_double_array=[]
     check_array_count=0
     fixed_flag=0
     
@@ -842,6 +852,7 @@ def check_data(target_file_path):
                     unique_key_array.remove(unir_value)
                 else:
                     race_result_insert_data.pop(race_id, None)
+                    umaban_double_array.append(str(r[0]))
                     fixed_flag = 1
                     print("馬番被りあり:", r[0])
                     break
@@ -849,7 +860,7 @@ def check_data(target_file_path):
             check_array_count = check_array_count + 1
 
         race_id_set=set(race_id_set)
-        return race_result_insert_data, fixed_flag,race_id_array,race_id_set
+        return race_result_insert_data, fixed_flag,race_id_array,race_id_set,umaban_double_array
 
 def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
     #race_resultの場合
@@ -888,7 +899,7 @@ def make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array):
         writer.writerows(export_csv_array)    
     return export_csv_path
 
-def sent_mail(not_exists_array):
+def sent_mail(sent_mail_array,sent_mail_flag):
     str_count=0
     main_str=""
 
@@ -905,41 +916,57 @@ def sent_mail(not_exists_array):
         creds = flow.run_local_server(port=8080)
         with open(token_path, 'w') as token:
             token.write(creds.to_json())
-    if len(not_exists_array)!=0:
-        while len(not_exists_array)>str_count:
-            str_temp=not_exists_array[str_count]
+
+    if len(sent_mail_array)!=0:
+        while len(sent_mail_array)>str_count:
+            str_temp=sent_mail_array[str_count]
             main_str=str(main_str)+str(str_temp)+"\n"
             str_count=str_count+1
 
-        service = build('gmail', 'v1', credentials=creds)
-        sender = "aweqrenotice@gmail.com"
-        to = "aweqsenotice@gmail.com"
+    if sent_mail_flag==0:
         subject = "インサートcsv不備"
         send_text = (
-            "馬番重複があります。確認して手動で対処してください\n"
-            f"レースIDは \n {main_str} です。"
-        )
+        "インサートされてないレースがあります。手動で確認してください\n"
+        f"レースIDは \n {main_str} です。")
 
-        message = MIMEText(send_text, "plain", "utf-8")
-        message["to"] = to
-        message["from"] = sender
-        message["subject"] = subject
+    elif sent_mail_flag==1:
+        subject = "予期せぬインサート"
+        send_text = (
+        "馬番の最大値とインサートされている行の数が合いません。手動で確認してください。\n"
+        f"レースIDは \n {main_str} です。")
 
-        raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        message_body = {"raw": raw_message}
+    elif sent_mail_flag==2:
+        subject = "馬番重複"
+        send_text = (
+        "馬番の重複がありましたのでインサート処理をスキップしています。手動で確認してインサートしてください。\n"
+        f"レースIDは \n {main_str} です。")
 
-        try:
-            response = service.users().messages().send(
-                userId="me",
-                body=message_body
-            ).execute()
 
-            print(f"メールの送信完了 race_id={str}")
-            return response
+    service = build('gmail', 'v1', credentials=creds)
+    sender = "aweqrenotice@gmail.com"
+    to = "aweqsenotice@gmail.com"
+    
 
-        except Exception as e:
-            print(f"メール送信失敗 race_id={str}")
-            print(e)
+    message = MIMEText(send_text, "plain", "utf-8")
+    message["to"] = to
+    message["from"] = sender
+    message["subject"] = subject
+
+    raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    message_body = {"raw": raw_message}
+
+    try:
+        response = service.users().messages().send(
+            userId="me",
+            body=message_body
+        ).execute()
+
+        print(f"メールの送信完了 race_id={str}")
+        return response
+
+    except Exception as e:
+        print(f"メール送信失敗 race_id={str}")
+        print(e)
 
 def convert_form_dict_to_list(target_dict):
     from_dict_to_converted_array=[]
@@ -3733,8 +3760,20 @@ def insert_check(cursor, race_id_set):
             not_exists_array.append(race_id)
 
     if len(not_exists_array) != 0:
-        sent_mail(not_exists_array)
+        sent_mail_array=not_exists_array
+        sent_mail_flag=0
+        sent_mail(sent_mail_array,sent_mail_flag)
+    return
 
+def Unexpected_insert(cursor):
+    Unexpected_insert_query="SELECT race_id,COUNT(*) AS row_count,COUNT(DISTINCT umaban) AS umaban_count,MAX(umaban) AS max_umaban FROM race_result GROUP BY race_id HAVING COUNT(DISTINCT umaban) <> MAX(umaban);"
+    cursor.execute(Unexpected_insert_query)
+    Unexpected_insert_array = cursor.fetchall()
+
+    if len(Unexpected_insert_array) != 0:
+        sent_mail_array=Unexpected_insert_array
+        sent_mail_flag=1
+        sent_mail(sent_mail_array,sent_mail_flag)
     return
 
 main()
