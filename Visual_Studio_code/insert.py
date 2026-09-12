@@ -182,6 +182,10 @@ def main():
     delete_source_file()
     print("すべての処理完了！！")
 
+    sent_mail_array=[]
+    sent_mail_flag=3
+    sent_mail(sent_mail_array,sent_mail_flag)
+
 def connect_mysql():
     sql_pass=config.sql_pass
     # DB接続 
@@ -939,6 +943,10 @@ def sent_mail(sent_mail_array,sent_mail_flag):
         send_text = (
         "馬番の重複がありましたのでインサート処理をスキップしています。手動で確認してインサートしてください。\n"
         f"レースIDは \n {main_str} です。")
+
+    elif sent_mail_flag==3:
+        subject = "処理完了通知"
+        send_text = ("インサート処理が完了しました。念のため再起動してください")
 
 
     service = build('gmail', 'v1', credentials=creds)
