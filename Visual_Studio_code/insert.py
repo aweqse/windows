@@ -407,7 +407,6 @@ def insert_odds(target_file_path,target_file,conn,cursor):
                 if len(total_array)>10000:
                     insert_query="insert into race_odds values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
                     cursor.executemany(insert_query, total_array)
-                    conn.commit()
                     total_array=[]
                     print("暫定コミット完了")
             
