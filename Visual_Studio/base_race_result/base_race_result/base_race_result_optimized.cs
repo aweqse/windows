@@ -17,7 +17,7 @@ class Program
     // ================================================================
     // false: 先週の月曜～日曜を自動取得
     // true : 下記の開始日～終了日を取得
-    static readonly bool UseManualDateRange = true;
+    static readonly bool UseManualDateRange = false;
     static readonly string ManualStartDateText = "20260101"; // 開始日 yyyyMMdd
     static readonly string ManualEndDateText = "20260831";   // 終了日 yyyyMMdd
     // ================================================================
