@@ -19,7 +19,7 @@ class Program
     // true : 下記の開始日～終了日を取得
     static readonly bool UseManualDateRange = false;
     static readonly string ManualStartDateText = "20260101"; // 開始日 yyyyMMdd
-    static readonly string ManualEndDateText = "20260831";   // 終了日 yyyyMMdd
+    static readonly string ManualEndDateText = "20260913";   // 終了日 yyyyMMdd
     // ================================================================
 
     // FlattenObject後の辞書は読み取り専用として扱うため、項目名のサフィックス索引を再利用できる。
