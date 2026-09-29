@@ -40,7 +40,7 @@ def main():
 
     #mysqlのdump（バックアップを取得処理を追加する)
     print("mysqlのdump開始")
-    dump_mysql()
+    #dump_mysql()
 
     while len(race_result_filename_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -1294,7 +1294,7 @@ def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
                 continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
             
             #テスト用パラメーター
             #horse_5run_race_count_array.append({ 'year':2018,'month':8,'day':26,'umaban':10,'rank':0,'race_time':1482,'last_3_furlong_time':392,'race_ninki':12})
@@ -2609,7 +2609,7 @@ def horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array,target_
                 continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2703,7 +2703,7 @@ def horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2797,7 +2797,7 @@ def horse_course_distance_summary(horse_course_distancerace_dict,horse_course_di
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2892,7 +2892,7 @@ def horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array
                 continue
 
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -2986,7 +2986,7 @@ def horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3080,7 +3080,7 @@ def horse_course_type_detail_summary(turf_course_type_dict,horse_turf_course_typ
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3174,7 +3174,7 @@ def horse_turf_condition_summary(turf_condition_dict,horse_turf_condition_key_ar
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3270,7 +3270,7 @@ def horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_ar
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3367,7 +3367,7 @@ def horse_place_distance_group_summary(horse_place_distance_group_dict,horse_pla
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3462,7 +3462,7 @@ def horse_course_type_distance_group_summary(horse_course_type_distance_group_di
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
@@ -3557,7 +3557,7 @@ def horse_place_course_type_summary(horse_place_course_type_dict,horse_place_cou
             if int(summary_day) not in target_summary_day_set:
                 continue
             #未来の日付を集計でとらないように要素を+1する。(ソートしてるので+1でOK)
-            target_array = target_array_origin[target_index :]
+            target_array = target_array_origin[target_index +1:]
 
             #競走中止を取り除く
             horse_place_close_run_array=[r for r in target_array if int(r["race_rank"])!=0]
