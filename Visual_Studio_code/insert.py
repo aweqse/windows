@@ -14,15 +14,6 @@ import os
 import subprocess
 from time import sleep
 
-#-------20260605-------
-#これからやること
-#集約テーブルを作成してupdateするクエリを作り呼び出す処理を書く
-#集約する対象はインサートするcsvか全部の2択にする。h
-#⑥差分(2026年分)をダウンロードしてinsert.pyの一連の処理が正しく行われることの確認
-#⑦全体を管理するサーバーとスクリプトを書いて自動的にVMの起動、スクリプトの実行と一連の処理がうまく行くか試す.
-#⑧本番環境のVMを建てて環境構築をなるべく自動化(win-getとpowershellで）する
-#⑩推論csvのスクリプトを完成させる
-
 def main():
     today=date.today()
     now = today.strftime("%Y%m%d")
@@ -181,6 +172,7 @@ def main():
     #windowsのローカルファイルを削除する
     delete_source_file()
     print("すべての処理完了！！")
+    subprocess.run(["shutdown", "/s", "/t", "0"], check=True)
 
     sent_mail_array=[]
     sent_mail_flag=3
