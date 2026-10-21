@@ -172,7 +172,8 @@ def main():
     #windowsのローカルファイルを削除する
     delete_source_file()
     print("すべての処理完了！！")
-    subprocess.run(["shutdown", "/s", "/t", "0"], check=True)
+    subprocess.run(["taskkill", "/F", "/IM", "TFJV.EXE"], check=False)
+    subprocess.run(["taskkill", "/F", "/IM", "WindowsTerminal.exe"], check=False)
 
     sent_mail_array=[]
     sent_mail_flag=3
