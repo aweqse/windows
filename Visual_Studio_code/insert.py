@@ -172,13 +172,13 @@ def main():
     #windowsのローカルファイルを削除する
     delete_source_file()
     print("すべての処理完了！！")
-    subprocess.run(["taskkill", "/F", "/IM", "TFJV.EXE"], check=False)
-    subprocess.run(["taskkill", "/F", "/IM", "WindowsTerminal.exe"], check=False)
-
+    
     sent_mail_array=[]
     sent_mail_flag=3
     sent_mail(sent_mail_array,sent_mail_flag)
-
+    subprocess.run(["taskkill", "/F", "/IM", "TFJV.EXE"], check=False)
+    subprocess.run(["taskkill", "/F", "/IM", "WindowsTerminal.exe"], check=False)
+    
 def connect_mysql():
     sql_pass=config.sql_pass
     # DB接続 
