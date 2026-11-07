@@ -65,43 +65,41 @@ def main():
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
 
         print("race_resultのインサート開始")
-        insert_race_result(from_dict_to_converted_array,conn,cursor)
-
-        insert_check(cursor,race_id_set)
-
-        Unexpected_insert(cursor)
+        #insert_race_result(from_dict_to_converted_array,conn,cursor)
+        #insert_check(cursor,race_id_set)
+        #Unexpected_insert(cursor)
         
         #データの集約
         print("データの集計を開始します。")
         trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array,target_summary_day_set=make_summary_dict(export_csv_path,cursor)
         target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_summary_dict,trainer_id_array)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_summary_dict,jockey_id_array)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array,target_summary_day_set) 
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_detail_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_turf_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array,target_summary_day_set)
-        summary_insert(conn,cursor,target_array,insert_flag)
+        #summary_insert(conn,cursor,target_array,insert_flag)
         print("データの集約とインサート完了")
 
         #この処理は必ず最後に置く
@@ -1067,8 +1065,10 @@ def make_summary_dict(export_csv_path,cursor):
 
             ymd_array.append(int(ymd))
             horse_id_array.append(int(row["horse_id"]))
-            trainer_id_array.append(int(trainer_id))
-            jockey_id_array.append(int(row["jockey_id"]))
+            if trainer_id!="":
+             trainer_id_array.append(int(trainer_id))
+            if jockey_id!="":
+                jockey_id_array.append(int(row["jockey_id"]))
 
         horse_id_array=list(set(horse_id_array))
         trainer_id_array=list(set(trainer_id_array))
@@ -1308,24 +1308,16 @@ def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
     
             #6か月の有効出走数を集計する
             #6か月前の日付を算出する
-            before_6month=int(month)-6
-            if before_6month<=0:
-                before_6year=int(year)-1
-                before_6month=12+before_6month
-            else:
-                before_6year=year
+            before_1m,before_3m,before_6m,before_12m=convert_day(summary_day)
 
             horse_close6month_run_array=horse_close_run_array.copy()
-            under_day_1=before_6year*10000+before_6month*100+int(day)
 
-            month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            month6_array=[s for s in horse_close6month_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_6m]
             horse_6m_race_count=len(month6_array)
 
             horse_close1year_run_array=horse_close6month_run_array.copy()
-            before_12year=int(year)-1
 
-            under_day_2=before_12year*10000+int(month)*100+int(day)
-            month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            month12_array=[s for s in horse_close1year_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_12m]
             horse_12m_race_count=len(month12_array)
 
             #一着回数を算出する
@@ -1693,19 +1685,15 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in trainer_race_day_list:
             summary_day=h
-            #各日付を算出する
-            under_day_0=int(h)-100
-            under_day_1=int(h)-300
-            under_day_2=int(h)-600
-            under_day_3=int(h)-10000
+            before_1m,before_3m,before_6m,before_12m=convert_day(h)
 
             #出走期間と出走数を抽出する
             summary_day_int=int(summary_day)
             today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day_int]
-            month1_array=[s for s in trainer_close_run_array if under_day_0 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month3_array=[s for s in trainer_close_run_array if under_day_1 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month6_array=[s for s in trainer_close_run_array if under_day_2 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month12_array=[s for s in trainer_close_run_array if under_day_3 <= int(s["trainer_race_day"]) <= summary_day_int]
+            month1_array=[s for s in trainer_close_run_array if before_1m <= int(s["trainer_race_day"]) < summary_day_int]
+            month3_array=[s for s in trainer_close_run_array if before_3m <= int(s["trainer_race_day"]) < summary_day_int]
+            month6_array=[s for s in trainer_close_run_array if before_6m <= int(s["trainer_race_day"]) < summary_day_int]
+            month12_array=[s for s in trainer_close_run_array if before_12m <= int(s["trainer_race_day"]) < summary_day_int]
 
             trainer_today_race_count=len(today_array)
             trainer_1m_race_count=len(month1_array)
@@ -2152,18 +2140,14 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in jockey_race_day_list:
             summary_day=h
-            #各日付を算出する
-            under_day_0=int(h)-100
-            under_day_1=int(h)-300
-            under_day_2=int(h)-600
-            under_day_3=int(h)-10000
+            before_1m,before_3m,before_6m,before_12m=convert_day(h)
 
             #出走期間と出走数を抽出する
-            today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==summary_day]
-            month1_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_0]
-            month3_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_1]
-            month6_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_2]
-            month12_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_3]
+            today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==int(summary_day)]
+            month1_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_1m]
+            month3_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_3m]
+            month6_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_6m]
+            month12_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_12m]
             
             jockey_today_race_count=len(today_array)
             jockey_1m_race_count=len(month1_array)
@@ -3782,5 +3766,70 @@ def Unexpected_insert(cursor):
         sent_mail_flag=1
         sent_mail(sent_mail_array,sent_mail_flag)
     return
+
+def convert_day(h):
+    month_day={1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31}
+    year=h[0:4]
+    month=h[4:6]
+    day=h[6:8]
+
+    before_1m_month=month
+    before_1m_year=year
+    before_1m_month=int(month)-1
+    if before_1m_month==0:
+        before_1m_year=int(year)-1
+        before_1m_month=12
+    before_1m_day=month_day[before_1m_month]
+
+    before_3m_month=month
+    before_3m_year=year
+    before_3m_month=int(month)-3
+    if before_3m_month<=0:
+        before_3m_year=int(year)-1
+        before_3m_month=12+before_3m_month
+    before_3m_day=month_day[before_3m_month]
+
+    before_6m_month=month
+    before_6m_year=year 
+    before_6m_month=int(month)-6
+    if before_6m_month<=0:
+        before_6m_year=int(year)-1
+        before_6m_month=12+before_6m_month
+    before_6m_day=month_day[before_6m_month]
+
+    before_12m_year=year
+    before_12m_year=int(before_12m_year)-1
+
+    before_1m_day = min(int(day), month_day[before_1m_month])
+    before_3m_day = min(int(day), month_day[before_3m_month])
+    before_6m_day = min(int(day), month_day[before_6m_month])
+
+    if len(str(before_1m_year))==1:
+        before_1m_year="0"+str(before_1m_year)
+    if len(str(before_1m_month))==1:
+        before_1m_month="0"+str(before_1m_month)
+    if len(str(before_1m_day))==1:
+        before_1m_day="0"+str(before_1m_day)
+    
+    if len(str(before_3m_year))==1:
+        before_3m_year="0"+str(before_3m_year)
+    if len(str(before_3m_month))==1:
+        before_3m_month="0"+str(before_3m_month)
+    if len(str(before_3m_day))==1:
+        before_3m_day="0"+str(before_3m_day)
+
+    if len(str(before_6m_year))==1:
+        before_6m_year="0"+str(before_6m_year)
+    if len(str(before_6m_month))==1:
+        before_6m_month="0"+str(before_6m_month)
+    if len(str(before_6m_day))==1:
+        before_6m_day="0"+str(before_6m_day)
+    
+    before_1m=str(before_1m_year)+str(before_1m_month)+str(before_1m_day)
+    before_3m=str(before_3m_year)+str(before_3m_month)+str(before_3m_day)
+    before_6m=str(before_6m_year)+str(before_6m_month)+str(before_6m_day)
+    before_12m=str(before_12m_year)+month+day
+
+    return int(before_1m),int(before_3m),int(before_6m),int(before_12m)
 
 main()
