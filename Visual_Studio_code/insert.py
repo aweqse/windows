@@ -31,7 +31,7 @@ def main():
 
     #mysqlのdump（バックアップを取得処理を追加する)
     print("mysqlのdump開始")
-    #dump_mysql()
+    dump_mysql()
 
     while len(race_result_filename_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -1300,27 +1300,14 @@ def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
             horse_1m_race_count=len(horse_close10_run_array)
     
             #6か月の有効出走数を集計する
-            #6か月前の日付を算出する
-            before_6month=int(month)-6
-            if before_6month<=0:
-                before_6year=int(year)-1
-                before_6month=12+before_6month
-            else:
-                before_6year=year
-
+            before_1m,before_3m,before_6m,before_12m=convert_day(summary_day)
             horse_close6month_run_array=horse_close_run_array.copy()
-            under_day_1=before_6year*10000+before_6month*100+int(day)
-
-            month6_array=[s for s in horse_close6month_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_1]
+            month6_array=[s for s in horse_close6month_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_6m]
             horse_6m_race_count=len(month6_array)
-
             horse_close1year_run_array=horse_close6month_run_array.copy()
-            before_12year=int(year)-1
-
-            under_day_2=before_12year*10000+int(month)*100+int(day)
-            month12_array=[s for s in horse_close1year_run_array if int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=under_day_2]
+            month12_array=[s for s in horse_close1year_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_12m]
             horse_12m_race_count=len(month12_array)
-
+            
             #一着回数を算出する
             horse_close5_win1_array=[r for r in horse_close5_run_array if int(r["race_rank"])==1]
             horse_5run_win_count=len(horse_close5_win1_array)
@@ -1686,19 +1673,15 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in trainer_race_day_list:
             summary_day=h
-            #各日付を算出する
-            under_day_0=int(h)-100
-            under_day_1=int(h)-300
-            under_day_2=int(h)-600
-            under_day_3=int(h)-10000
+            before_1m,before_3m,before_6m,before_12m=convert_day(h)
 
             #出走期間と出走数を抽出する
             summary_day_int=int(summary_day)
             today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day_int]
-            month1_array=[s for s in trainer_close_run_array if under_day_0 <= int(s["trainer_race_day"]) < summary_day_int]
-            month3_array=[s for s in trainer_close_run_array if under_day_1 <= int(s["trainer_race_day"]) < summary_day_int]
-            month6_array=[s for s in trainer_close_run_array if under_day_2 <= int(s["trainer_race_day"]) < summary_day_int]
-            month12_array=[s for s in trainer_close_run_array if under_day_3 <= int(s["trainer_race_day"]) < summary_day_int]
+            month1_array=[s for s in trainer_close_run_array if before_1m <= int(s["trainer_race_day"]) < summary_day_int]
+            month3_array=[s for s in trainer_close_run_array if before_3m <= int(s["trainer_race_day"]) < summary_day_int]
+            month6_array=[s for s in trainer_close_run_array if before_6m <= int(s["trainer_race_day"]) < summary_day_int]
+            month12_array=[s for s in trainer_close_run_array if before_12m <= int(s["trainer_race_day"]) < summary_day_int]
 
             trainer_today_race_count=len(today_array)
             trainer_1m_race_count=len(month1_array)
@@ -2145,18 +2128,15 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
         #配列の中身と要素を取得する。
         for h ,race_id,umaban in jockey_race_day_list:
             summary_day=h
-            #各日付を算出する
-            under_day_0=int(h)-100
-            under_day_1=int(h)-300
-            under_day_2=int(h)-600
-            under_day_3=int(h)-10000
+            before_1m,before_3m,before_6m,before_12m=convert_day(h)
 
             #出走期間と出走数を抽出する
-            today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==summary_day]
-            month1_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_0]
-            month3_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_1]
-            month6_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_2]
-            month12_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])>=under_day_3]
+            today_array=[s for s in jockey_close_run_array if int(s["jockey_race_day"])==int(summary_day)]
+            month1_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_1m]
+            month3_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_3m]
+            month6_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_6m]
+            month12_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_12m]
+            
             
             jockey_today_race_count=len(today_array)
             jockey_1m_race_count=len(month1_array)
@@ -3775,5 +3755,70 @@ def Unexpected_insert(cursor):
         sent_mail_flag=1
         sent_mail(sent_mail_array,sent_mail_flag)
     return
+
+def convert_day(h):
+    month_day={1:31,2:28,3:31,4:30,5:31,6:30,7:31,8:31,9:30,10:31,11:30,12:31}
+    year=h[0:4]
+    month=h[4:6]
+    day=h[6:8]
+
+    before_1m_month=month
+    before_1m_year=year
+    before_1m_month=int(month)-1
+    if before_1m_month==0:
+        before_1m_year=int(year)-1
+        before_1m_month=12
+    before_1m_day=month_day[before_1m_month]
+
+    before_3m_month=month
+    before_3m_year=year
+    before_3m_month=int(month)-3
+    if before_3m_month<=0:
+        before_3m_year=int(year)-1
+        before_3m_month=12+before_3m_month
+    before_3m_day=month_day[before_3m_month]
+
+    before_6m_month=month
+    before_6m_year=year 
+    before_6m_month=int(month)-6
+    if before_6m_month<=0:
+        before_6m_year=int(year)-1
+        before_6m_month=12+before_6m_month
+    before_6m_day=month_day[before_6m_month]
+
+    before_12m_year=year
+    before_12m_year=int(before_12m_year)-1
+
+    before_1m_day = min(int(day), month_day[before_1m_month])
+    before_3m_day = min(int(day), month_day[before_3m_month])
+    before_6m_day = min(int(day), month_day[before_6m_month])
+
+    if len(str(before_1m_year))==1:
+        before_1m_year="0"+str(before_1m_year)
+    if len(str(before_1m_month))==1:
+        before_1m_month="0"+str(before_1m_month)
+    if len(str(before_1m_day))==1:
+        before_1m_day="0"+str(before_1m_day)
+    
+    if len(str(before_3m_year))==1:
+        before_3m_year="0"+str(before_3m_year)
+    if len(str(before_3m_month))==1:
+        before_3m_month="0"+str(before_3m_month)
+    if len(str(before_3m_day))==1:
+        before_3m_day="0"+str(before_3m_day)
+
+    if len(str(before_6m_year))==1:
+        before_6m_year="0"+str(before_6m_year)
+    if len(str(before_6m_month))==1:
+        before_6m_month="0"+str(before_6m_month)
+    if len(str(before_6m_day))==1:
+        before_6m_day="0"+str(before_6m_day)
+    
+    before_1m=str(before_1m_year)+str(before_1m_month)+str(before_1m_day)
+    before_3m=str(before_3m_year)+str(before_3m_month)+str(before_3m_day)
+    before_6m=str(before_6m_year)+str(before_6m_month)+str(before_6m_day)
+    before_12m=str(before_12m_year)+month+day
+
+    return int(before_1m),int(before_3m),int(before_6m),int(before_12m)
 
 main()
