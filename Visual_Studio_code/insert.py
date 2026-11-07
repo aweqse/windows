@@ -31,7 +31,7 @@ def main():
 
     #mysqlのdump（バックアップを取得処理を追加する)
     print("mysqlのdump開始")
-    dump_mysql()
+    #dump_mysql()
 
     while len(race_result_filename_array)!=0:
         #csvファイルは一つしかない想定なので[0]固定
@@ -57,9 +57,7 @@ def main():
 
         print("race_resultのインサート開始")
         insert_race_result(from_dict_to_converted_array,conn,cursor)
-
         insert_check(cursor,race_id_set)
-
         Unexpected_insert(cursor)
         
         #データの集約
@@ -1060,8 +1058,10 @@ def make_summary_dict(export_csv_path,cursor):
 
             ymd_array.append(int(ymd))
             horse_id_array.append(int(row["horse_id"]))
-            trainer_id_array.append(int(trainer_id))
-            jockey_id_array.append(int(row["jockey_id"]))
+            if trainer_id!="":
+                trainer_id_array.append(int(trainer_id))
+            if jockey_id!="":
+                jockey_id_array.append(int(row["jockey_id"]))
 
         horse_id_array=list(set(horse_id_array))
         trainer_id_array=list(set(trainer_id_array))
