@@ -946,10 +946,12 @@ def sent_mail(sent_mail_array,sent_mail_flag):
         subject = "処理完了通知"
         send_text = ("インサート処理が完了しました。念のため再起動してください")
 
+
     service = build('gmail', 'v1', credentials=creds)
     sender = "aweqrenotice@gmail.com"
     to = "aweqsenotice@gmail.com"
-    
+
+
     message = MIMEText(send_text, "plain", "utf-8")
     message["to"] = to
     message["from"] = sender
@@ -1305,16 +1307,11 @@ def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
             horse_1m_race_count=len(horse_close10_run_array)
     
             #6か月の有効出走数を集計する
-            #6か月前の日付を算出する
             before_1m,before_3m,before_6m,before_12m=convert_day(summary_day)
-
             horse_close6month_run_array=horse_close_run_array.copy()
-
             month6_array=[s for s in horse_close6month_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_6m]
             horse_6m_race_count=len(month6_array)
-
             horse_close1year_run_array=horse_close6month_run_array.copy()
-
             month12_array=[s for s in horse_close1year_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_12m]
             horse_12m_race_count=len(month12_array)
 

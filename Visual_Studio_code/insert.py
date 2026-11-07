@@ -170,13 +170,13 @@ def main():
     #windowsのローカルファイルを削除する
     delete_source_file()
     print("すべての処理完了！！")
-    
+
     sent_mail_array=[]
     sent_mail_flag=3
     sent_mail(sent_mail_array,sent_mail_flag)
     subprocess.run(["taskkill", "/F", "/IM", "TFJV.EXE"], check=False)
     subprocess.run(["taskkill", "/F", "/IM", "cmd.exe"], check=False)
-    
+
 def connect_mysql():
     sql_pass=config.sql_pass
     # DB接続 
@@ -943,7 +943,7 @@ def sent_mail(sent_mail_array,sent_mail_flag):
     service = build('gmail', 'v1', credentials=creds)
     sender = "aweqrenotice@gmail.com"
     to = "aweqsenotice@gmail.com"
-    
+
 
     message = MIMEText(send_text, "plain", "utf-8")
     message["to"] = to
@@ -1059,7 +1059,7 @@ def make_summary_dict(export_csv_path,cursor):
             ymd_array.append(int(ymd))
             horse_id_array.append(int(row["horse_id"]))
             if trainer_id!="":
-                trainer_id_array.append(int(trainer_id))
+             trainer_id_array.append(int(trainer_id))
             if jockey_id!="":
                 jockey_id_array.append(int(row["jockey_id"]))
 
@@ -1307,7 +1307,7 @@ def horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set):
             horse_close1year_run_array=horse_close6month_run_array.copy()
             month12_array=[s for s in horse_close1year_run_array if int(summary_day)>int(s["year"])*10000+int(s["month"])*100+int(s["day"])>=before_12m]
             horse_12m_race_count=len(month12_array)
-            
+
             #一着回数を算出する
             horse_close5_win1_array=[r for r in horse_close5_run_array if int(r["race_rank"])==1]
             horse_5run_win_count=len(horse_close5_win1_array)
@@ -2137,7 +2137,6 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             month6_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_6m]
             month12_array=[s for s in jockey_close_run_array if int(summary_day)>int(s["jockey_race_day"])>=before_12m]
             
-            
             jockey_today_race_count=len(today_array)
             jockey_1m_race_count=len(month1_array)
             jockey_3m_race_count=len(month3_array)
@@ -2274,7 +2273,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in today_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
