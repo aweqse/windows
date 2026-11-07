@@ -65,41 +65,41 @@ def main():
         export_csv_path=make_csv(target_file,output_csv,fixed_flag,from_dict_to_converted_array)
 
         print("race_resultのインサート開始")
-        #insert_race_result(from_dict_to_converted_array,conn,cursor)
-        #insert_check(cursor,race_id_set)
-        #Unexpected_insert(cursor)
+        insert_race_result(from_dict_to_converted_array,conn,cursor)
+        insert_check(cursor,race_id_set)
+        Unexpected_insert(cursor)
         
         #データの集約
         print("データの集計を開始します。")
         trainer_race_day_dict,jockey_race_day_dict,horse_race_result_dict,trainer_summary_dict,jockey_summary_dict,horse_id_place_dict,horse_distance_group_dict,horse_course_distancerace_dict,horse_course_type_dict,horse_turn_direction_dict,turf_course_type_dict,turf_condition_dict,dirt_condition_dict,horse_place_distance_group_dict,horse_course_type_distance_group_dict,horse_place_course_type_dict,horse_id_array,trainer_id_array,jockey_id_array,horse_id_and_place_key_array,horse_distance_group_key_array,horse_course_distancerace_key_array,horse_course_type_key_array,horse_turn_direction_key_array,horse_turf_course_type_array,horse_turf_condition_key_array,horse_dirt_condition_key_array,horse_place_distance_group_key_array,horse_course_type_distance_group_key_array,horse_place_course_type_key_array,target_summary_day_set=make_summary_dict(export_csv_path,cursor)
         target_array,insert_flag=horse_summary(horse_race_result_dict,horse_id_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=trainer_summary(trainer_race_day_dict,trainer_summary_dict,trainer_id_array)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=jockey_summary(jockey_race_day_dict,jockey_summary_dict,jockey_id_array)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_summary(horse_id_place_dict,horse_id_and_place_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_distance_group_summary(horse_distance_group_dict,horse_distance_group_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_distance_summary(horse_course_distancerace_dict,horse_course_distancerace_key_array,target_summary_day_set) 
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_summary(horse_course_type_dict,horse_course_type_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_turn_direction_summary(horse_turn_direction_dict,horse_turn_direction_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_detail_summary(turf_course_type_dict,horse_turf_course_type_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_turf_condition_summary(turf_condition_dict,horse_turf_condition_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_dirt_condition_summary(dirt_condition_dict,horse_dirt_condition_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_distance_group_summary(horse_place_distance_group_dict,horse_place_distance_group_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_course_type_distance_group_summary(horse_course_type_distance_group_dict,horse_course_type_distance_group_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         target_array,insert_flag=horse_place_course_type_summary(horse_place_course_type_dict,horse_place_course_type_key_array,target_summary_day_set)
-        #summary_insert(conn,cursor,target_array,insert_flag)
+        summary_insert(conn,cursor,target_array,insert_flag)
         print("データの集約とインサート完了")
 
         #この処理は必ず最後に置く
@@ -946,12 +946,10 @@ def sent_mail(sent_mail_array,sent_mail_flag):
         subject = "処理完了通知"
         send_text = ("インサート処理が完了しました。念のため再起動してください")
 
-
     service = build('gmail', 'v1', credentials=creds)
     sender = "aweqrenotice@gmail.com"
     to = "aweqsenotice@gmail.com"
     
-
     message = MIMEText(send_text, "plain", "utf-8")
     message["to"] = to
     message["from"] = sender
@@ -2285,7 +2283,7 @@ def jockey_summary(jockey_race_day_dict,jockey_race_result_dict,jockey_id_array)
             rank=rank_sum=time_lag=time_lag_sum=ninki=ninki_sum=rank_ninki_sum=over_rank_count=last_3_furlong_rank_sum=ninki_race_count=time_lag_count=0
 
             for e in today_array:
-                rank=int(e["race_rank"])
+                rank=int(e["rank"])
                 time_lag=int(e["time_lag"])
                 ninki=int(e["race_ninki"])
                 if time_lag!=9999:
