@@ -177,7 +177,7 @@ def main():
     sent_mail_flag=3
     sent_mail(sent_mail_array,sent_mail_flag)
     subprocess.run(["taskkill", "/F", "/IM", "TFJV.EXE"], check=False)
-    subprocess.run(["taskkill", "/F", "/IM", "WindowsTerminal.exe"], check=False)
+    subprocess.run(["taskkill", "/F", "/IM", "cmd.exe"], check=False)
     
 def connect_mysql():
     sql_pass=config.sql_pass
@@ -1695,10 +1695,10 @@ def trainer_summary(trainer_race_day_dict,trainer_race_result_dict,trainer_id_ar
             #出走期間と出走数を抽出する
             summary_day_int=int(summary_day)
             today_array=[s for s in trainer_close_run_array if int(s["trainer_race_day"])==summary_day_int]
-            month1_array=[s for s in trainer_close_run_array if under_day_0 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month3_array=[s for s in trainer_close_run_array if under_day_1 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month6_array=[s for s in trainer_close_run_array if under_day_2 <= int(s["trainer_race_day"]) <= summary_day_int]
-            month12_array=[s for s in trainer_close_run_array if under_day_3 <= int(s["trainer_race_day"]) <= summary_day_int]
+            month1_array=[s for s in trainer_close_run_array if under_day_0 <= int(s["trainer_race_day"]) < summary_day_int]
+            month3_array=[s for s in trainer_close_run_array if under_day_1 <= int(s["trainer_race_day"]) < summary_day_int]
+            month6_array=[s for s in trainer_close_run_array if under_day_2 <= int(s["trainer_race_day"]) < summary_day_int]
+            month12_array=[s for s in trainer_close_run_array if under_day_3 <= int(s["trainer_race_day"]) < summary_day_int]
 
             trainer_today_race_count=len(today_array)
             trainer_1m_race_count=len(month1_array)
