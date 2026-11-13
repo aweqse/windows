@@ -977,10 +977,10 @@ def dump_mysql():
 
 def make_dir():
     #公開鍵認証必須
-    subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/make_dir"])
+    subprocess.run(["ssh","root@192.168.1.101","bash","/root/script/make_dir"])
 
 def upload_cloud():
-    subprocess.run(["ssh","root@192.168.1.101","bash","/srv/dev-disk-by-uuid-29f4a620-dfe9-4cb3-8687-148b707af7e8/SSD/script/upload_cloud"])
+    subprocess.run(["ssh","root@192.168.1.101","bash","/root/script/upload_cloud"])
 
 def export_csv_to_fileserver():
     code_path="C:\\Users\\aweqs\\Desktop\\workspace\\output\\script\\from_local_to_server.ps1"
